@@ -1,0 +1,988 @@
+<title>Inside Blanarch</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap">
+<style>
+:root{
+  --bg:#F3ECE1; --surface:#FBF8F2; --sand:#EAE1D2; --border:#DFD2BE; --outline:#907C63;
+  --ink:#2A241E; --muted:#6E6356; --accent:#7A5B39; --on-accent:#FFFAF2;
+  --ok:#466F52; --busy:#9C7130; --bad:#AE4E38; --slate:#4E6A7E;
+  --ui:#7A5B39; --bridge:#9C7130; --engine:#466F52; --adapter:#4E6A7E; --android:#AE4E38;
+  --ui-t:rgba(122,91,57,.10); --bridge-t:rgba(156,113,48,.12); --engine-t:rgba(70,111,82,.10); --adapter-t:rgba(78,106,126,.11); --android-t:rgba(174,78,56,.09);
+  --shadow:0 1px 0 rgba(42,36,30,.04), 0 10px 30px rgba(42,36,30,.07);
+  --serif:"Instrument Serif", "Iowan Old Style", Georgia, serif;
+  --sans:"Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --mono:"JetBrains Mono", ui-monospace, "SF Mono", Menlo, monospace;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    color-scheme:dark;
+    --bg:#16130F; --surface:#211D18; --sand:#2B261F; --border:#3A3229; --outline:#807262;
+    --ink:#F1E9DC; --muted:#A99C8B; --accent:#D2B48A; --on-accent:#1E1812;
+    --ok:#93C4A0; --busy:#E2B665; --bad:#E8907A; --slate:#9BB6CB;
+    --ui:#D2B48A; --bridge:#E2B665; --engine:#93C4A0; --adapter:#9BB6CB; --android:#E8907A;
+    --ui-t:rgba(210,180,138,.10); --bridge-t:rgba(226,182,101,.10); --engine-t:rgba(147,196,160,.09); --adapter-t:rgba(155,182,203,.10); --android-t:rgba(232,144,122,.09);
+    --shadow:0 1px 0 rgba(0,0,0,.2), 0 10px 30px rgba(0,0,0,.35);
+  }
+}
+:root[data-theme="dark"]{
+  color-scheme:dark;
+  --bg:#16130F; --surface:#211D18; --sand:#2B261F; --border:#3A3229; --outline:#807262;
+  --ink:#F1E9DC; --muted:#A99C8B; --accent:#D2B48A; --on-accent:#1E1812;
+  --ok:#93C4A0; --busy:#E2B665; --bad:#E8907A; --slate:#9BB6CB;
+  --ui:#D2B48A; --bridge:#E2B665; --engine:#93C4A0; --adapter:#9BB6CB; --android:#E8907A;
+  --ui-t:rgba(210,180,138,.10); --bridge-t:rgba(226,182,101,.10); --engine-t:rgba(147,196,160,.09); --adapter-t:rgba(155,182,203,.10); --android-t:rgba(232,144,122,.09);
+  --shadow:0 1px 0 rgba(0,0,0,.2), 0 10px 30px rgba(0,0,0,.35);
+}
+*{box-sizing:border-box}
+body{background:var(--bg); color:var(--ink); font-family:var(--sans); font-size:16px; line-height:1.6; padding-inline:18px; padding-block:0 80px; -webkit-font-smoothing:antialiased}
+a{color:var(--accent); text-underline-offset:3px; text-decoration-thickness:1px}
+a:hover{text-decoration-thickness:2px}
+:focus-visible{outline:2px solid var(--accent); outline-offset:3px; border-radius:6px}
+code, .mono{font-family:var(--mono); font-size:.86em}
+code{background:var(--sand); padding:.08em .38em; border-radius:6px; overflow-wrap:anywhere}
+h1,h2,h3{font-family:var(--serif); font-weight:400; text-wrap:balance; margin:0}
+h2{font-size:clamp(34px,5vw,46px); line-height:1.02}
+h3{font-size:26px; line-height:1.1}
+p{margin:0}
+.shell{max-width:1180px; margin:0 auto; display:grid; grid-template-columns:1fr; gap:40px}
+@media (min-width:1060px){ .shell{grid-template-columns:230px minmax(0,1fr)} }
+
+/* nav */
+.toc{display:none}
+@media (min-width:1060px){
+  .toc{display:block; position:sticky; top:calc(env(safe-area-inset-top,0px) + 24px); align-self:start; padding-top:40px; font-size:13.5px}
+  .toc .brand{font-family:var(--serif); font-size:24px; margin-bottom:14px}
+  .toc .brand i{color:var(--accent)}
+  .toc ol{list-style:none; margin:0; padding:0; display:flex; flex-direction:column; gap:2px}
+  .toc a{display:flex; gap:10px; padding:5px 8px; border-radius:8px; color:var(--muted); text-decoration:none}
+  .toc a span{font-family:var(--mono); font-size:11.5px; color:var(--outline); min-width:18px; padding-top:1px}
+  .toc a:hover, .toc a.on{background:var(--sand); color:var(--ink)}
+}
+main{min-width:0; display:flex; flex-direction:column; gap:84px}
+
+/* hero */
+.hero{padding-top:44px; display:grid; gap:22px}
+.hero .kicker{font-family:var(--mono); font-size:12px; letter-spacing:.14em; text-transform:uppercase; color:var(--muted)}
+.hero h1{font-size:clamp(56px,10vw,112px); line-height:.9; letter-spacing:-.01em}
+.hero h1 i{color:var(--accent)}
+.hero .lede{font-size:19px; max-width:62ch; color:var(--ink)}
+.legend{display:flex; flex-wrap:wrap; gap:8px 14px; font-size:13px; color:var(--muted)}
+.legend b{display:inline-flex; align-items:center; gap:7px; font-weight:500}
+.sw{width:12px; height:12px; border-radius:3px; display:inline-block}
+.verify{display:flex; gap:12px; align-items:flex-start; background:var(--surface); border:1px solid var(--border); border-radius:16px; padding:14px 16px; max-width:760px; font-size:14.5px}
+.verify svg{flex-shrink:0; margin-top:2px}
+
+/* sections */
+section{scroll-margin-top:24px; display:flex; flex-direction:column; gap:22px}
+.sec-head{display:grid; gap:10px; max-width:760px}
+.sec-head .num{font-family:var(--mono); font-size:12px; color:var(--outline); letter-spacing:.1em}
+.prose{max-width:68ch; display:flex; flex-direction:column; gap:14px; color:var(--ink)}
+.prose p.muted, .muted{color:var(--muted)}
+.cite{font-size:12.5px; color:var(--muted)}
+.cite a{color:var(--muted)}
+.note{border-left:3px solid var(--busy); background:var(--surface); padding:12px 16px; border-radius:0 12px 12px 0; max-width:72ch; font-size:14.5px}
+.note b{color:var(--busy)}
+.note.fix{border-color:var(--bad)} .note.fix b{color:var(--bad)}
+.note.good{border-color:var(--ok)} .note.good b{color:var(--ok)}
+.panel{background:var(--surface); border:1px solid var(--border); border-radius:20px; box-shadow:var(--shadow); padding:22px}
+.scroll-x{overflow-x:auto}
+.two{display:grid; gap:18px; grid-template-columns:1fr}
+@media (min-width:820px){ .two{grid-template-columns:1fr 1fr} }
+
+/* big picture */
+.bigpic{display:grid; gap:14px; grid-template-columns:1fr}
+@media (min-width:760px){ .bigpic{grid-template-columns:1fr 150px 1fr; align-items:stretch} }
+.half{border-radius:18px; padding:18px; display:flex; flex-direction:column; gap:10px; border:1px solid var(--border)}
+.half h4{margin:0; font-family:var(--serif); font-weight:400; font-size:24px}
+.half ul{margin:0; padding-left:18px; font-size:14.5px; color:var(--ink)}
+.half.flutter{background:var(--ui-t)} .half.flutter h4{color:var(--ui)}
+.half.kotlin{background:var(--engine-t)} .half.kotlin h4{color:var(--engine)}
+.pipe{display:flex; flex-direction:column; align-items:center; justify-content:center; gap:8px; text-align:center; font-size:13px; color:var(--muted)}
+.pipe .bar{width:100%; max-width:150px; border-radius:12px; background:var(--bridge-t); border:1px dashed var(--bridge); padding:10px; color:var(--bridge); font-weight:600}
+.pipe .arrows{font-family:var(--mono); font-size:12px}
+
+/* layer explorer */
+.explorer{display:grid; gap:18px; grid-template-columns:1fr}
+@media (min-width:880px){ .explorer{grid-template-columns:minmax(0,340px) minmax(0,1fr)} }
+.stack{display:flex; flex-direction:column; gap:8px}
+.layer-btn{all:unset; box-sizing:border-box; cursor:pointer; border-radius:14px; padding:12px 14px; border:1px solid var(--border); background:var(--surface); display:grid; grid-template-columns:10px 1fr auto; gap:12px; align-items:center; transition:transform .15s ease, background .15s ease}
+.layer-btn:hover{transform:translateX(2px)}
+.layer-btn .dot{width:10px; height:36px; border-radius:4px}
+.layer-btn .t{font-weight:600; font-size:15px}
+.layer-btn .s{font-size:12.5px; color:var(--muted)}
+.layer-btn .k{font-family:var(--mono); font-size:11px; color:var(--outline)}
+.layer-btn[aria-pressed="true"]{background:var(--sand); border-color:var(--outline)}
+.flowtag{font-family:var(--mono); font-size:11.5px; color:var(--muted); text-align:center; padding:2px 0}
+.detail{display:flex; flex-direction:column; gap:12px}
+.detail h4{margin:0; font-family:var(--serif); font-weight:400; font-size:28px}
+.detail .role{font-size:16px}
+.detail dl{margin:0; display:grid; grid-template-columns:auto 1fr; gap:6px 14px; font-size:14px}
+.detail dt{color:var(--muted)}
+.detail dd{margin:0}
+.chips{display:flex; flex-wrap:wrap; gap:6px}
+.chip{font-family:var(--mono); font-size:12px; background:var(--sand); border-radius:999px; padding:3px 10px}
+
+/* hexagon */
+.hexwrap svg{width:100%; height:auto; display:block; max-width:880px; margin:0 auto}
+.hexwrap text{font-family:var(--sans); fill:var(--ink)}
+.hexwrap .mono{font-family:var(--mono)}
+
+/* trace */
+.trace{display:grid; gap:18px; grid-template-columns:1fr}
+@media (min-width:900px){ .trace{grid-template-columns:minmax(0,1fr) minmax(0,320px)} }
+.lanes{display:grid; grid-template-columns:repeat(5, minmax(120px,1fr)); gap:8px; min-width:640px}
+.lane{border-radius:14px; padding:10px 8px; display:flex; flex-direction:column; gap:8px; min-height:360px}
+.lane h5{margin:0; font-size:12px; letter-spacing:.08em; text-transform:uppercase; text-align:center}
+.lane.l1{background:var(--ui-t)} .lane.l1 h5{color:var(--ui)}
+.lane.l2{background:var(--bridge-t)} .lane.l2 h5{color:var(--bridge)}
+.lane.l3{background:var(--engine-t)} .lane.l3 h5{color:var(--engine)}
+.lane.l4{background:var(--adapter-t)} .lane.l4 h5{color:var(--adapter)}
+.lane.l5{background:var(--android-t)} .lane.l5 h5{color:var(--android)}
+.node{border-radius:10px; background:var(--surface); border:1px solid var(--border); padding:7px 8px; font-size:12.5px; line-height:1.35; opacity:.45; transition:opacity .2s ease, transform .2s ease, border-color .2s}
+.node .f{display:block; font-family:var(--mono); font-size:10.5px; color:var(--muted); margin-top:2px; overflow-wrap:anywhere}
+.node.on{opacity:1; border-color:var(--ink); transform:scale(1.02); box-shadow:var(--shadow)}
+.node.done{opacity:.9}
+.stepper{display:flex; flex-direction:column; gap:12px}
+.stepper .count{font-family:var(--mono); font-size:12px; color:var(--muted)}
+.stepper h4{margin:0; font-family:var(--serif); font-weight:400; font-size:26px; line-height:1.1}
+.stepper .body{font-size:15px}
+.stepper .ctrl{display:flex; gap:8px}
+.btn{all:unset; box-sizing:border-box; cursor:pointer; min-height:44px; padding:0 16px; border-radius:12px; display:inline-flex; align-items:center; gap:8px; font-weight:600; font-size:14px}
+.btn.primary{background:var(--ink); color:var(--bg)}
+.btn.ghost{border:1px solid var(--outline); color:var(--ink)}
+.btn[disabled]{opacity:.4; cursor:default}
+.progress{display:flex; gap:4px}
+.progress i{flex:1; height:3px; border-radius:2px; background:var(--border)}
+.progress i.on{background:var(--accent)}
+
+/* state machine */
+.sm svg{width:100%; height:auto; display:block; min-width:680px}
+.sm text{font-family:var(--sans)}
+.sm .st{cursor:pointer}
+.sm .st rect{transition:stroke-width .15s}
+.sm .st:hover rect, .sm .st.on rect{stroke-width:2.5}
+.sm-info{min-height:84px}
+
+/* core-shell */
+.rings{display:grid; place-items:center}
+.rings svg{width:100%; max-width:560px; height:auto}
+
+/* job tree */
+.tree svg{width:100%; height:auto; min-width:600px}
+
+/* wire */
+.wire{display:grid; gap:18px; grid-template-columns:1fr}
+@media (min-width:880px){ .wire{grid-template-columns:minmax(0,380px) minmax(0,1fr)} }
+.wstack{display:flex; flex-direction:column-reverse; gap:6px}
+.wlayer{all:unset; box-sizing:border-box; cursor:pointer; border-radius:12px; padding:10px 14px; border:1px solid var(--border); background:var(--surface); display:flex; justify-content:space-between; gap:10px; align-items:center; font-size:14px}
+.wlayer .p{font-family:var(--mono); font-size:11.5px; color:var(--muted)}
+.wlayer[aria-pressed="true"]{background:var(--adapter-t); border-color:var(--adapter)}
+.wdl{margin:0; display:grid; gap:4px 0; font-size:15px}
+.wdl dt{font-size:12px; letter-spacing:.08em; text-transform:uppercase; color:var(--muted); margin-top:8px}
+.wdl dd{margin:0}
+.bytes{font-family:var(--mono); font-size:12px; display:flex; flex-wrap:wrap; gap:4px}
+.bytes span{padding:6px 8px; border-radius:8px; border:1px solid var(--border)}
+
+/* security cards */
+.cards{display:grid; gap:14px; grid-template-columns:1fr}
+@media (min-width:760px){ .cards{grid-template-columns:repeat(3,1fr)} }
+.card{background:var(--surface); border:1px solid var(--border); border-radius:18px; padding:18px; display:flex; flex-direction:column; gap:10px}
+.card h4{margin:0; font-family:var(--serif); font-weight:400; font-size:24px}
+.card p{font-size:14.5px}
+
+/* pyramid */
+.pyr{display:grid; gap:18px; grid-template-columns:1fr; align-items:center}
+@media (min-width:820px){ .pyr{grid-template-columns:minmax(0,420px) 1fr} }
+.pyr svg{width:100%; height:auto}
+
+/* plans */
+.plan-grid{display:grid; gap:14px; grid-template-columns:1fr}
+@media (min-width:900px){ .plan-grid{grid-template-columns:repeat(3,1fr)} }
+.plan{border-radius:18px; padding:18px; border:1px solid var(--border); background:var(--surface); display:flex; flex-direction:column; gap:10px}
+.plan .tag{font-family:var(--mono); font-size:11.5px; color:var(--muted)}
+.plan h4{margin:0; font-family:var(--serif); font-weight:400; font-size:26px}
+.plan ul{margin:0; padding-left:18px; font-size:14px; display:flex; flex-direction:column; gap:4px}
+
+/* ike sequence */
+.seq{display:grid; gap:18px; grid-template-columns:1fr}
+@media (min-width:920px){ .seq{grid-template-columns:minmax(0,1fr) minmax(0,340px)} }
+.seq svg{width:100%; height:auto; min-width:520px}
+.seq .msg{cursor:pointer}
+.seq .msg line, .seq .msg path{transition:stroke-width .15s}
+.seq .msg.on line{stroke-width:3}
+.seq .msg.on text{font-weight:700}
+
+/* esp packet */
+.esp{display:flex; flex-direction:column; gap:12px}
+.esp-row{display:flex; gap:3px; min-width:620px}
+.esp-row button{all:unset; box-sizing:border-box; cursor:pointer; border-radius:8px; padding:12px 6px; text-align:center; font-family:var(--mono); font-size:11.5px; border:1px solid var(--border); background:var(--surface)}
+.esp-row button[aria-pressed="true"]{outline:2px solid var(--ink); outline-offset:1px}
+.esp-row .hdr{background:var(--adapter-t)}
+.esp-row .enc{background:var(--engine-t)}
+.esp-row .icv{background:var(--bridge-t)}
+.esp-legend{display:flex; flex-wrap:wrap; gap:10px 18px; font-size:12.5px; color:var(--muted)}
+
+/* compare table */
+table{border-collapse:collapse; width:100%; font-size:14px}
+th, td{text-align:left; padding:10px 12px; border-bottom:1px solid var(--border); vertical-align:top}
+th{font-size:12px; letter-spacing:.06em; text-transform:uppercase; color:var(--muted); font-weight:600}
+td .y{color:var(--ok); font-weight:600} td .n{color:var(--bad); font-weight:600} td .m{color:var(--busy); font-weight:600}
+
+/* glossary */
+.gloss{display:grid; gap:10px 24px; grid-template-columns:1fr}
+@media (min-width:760px){ .gloss{grid-template-columns:1fr 1fr} }
+.gloss div{padding:10px 0; border-bottom:1px solid var(--border); font-size:14.5px}
+.gloss b{font-family:var(--mono); font-size:13px; font-weight:500; color:var(--accent); display:block}
+
+/* checklist */
+.check{display:flex; flex-direction:column; gap:8px; max-width:760px}
+.check label{display:grid; grid-template-columns:24px 1fr; gap:12px; align-items:start; padding:12px 14px; background:var(--surface); border:1px solid var(--border); border-radius:14px; cursor:pointer; font-size:14.5px}
+.check input{width:20px; height:20px; accent-color:var(--ok); margin:2px 0 0}
+.check label:has(input:checked){opacity:.7}
+.check label:has(input:checked) span b{text-decoration:line-through}
+.sources{columns:1; font-size:13px; color:var(--muted)}
+@media (min-width:820px){ .sources{columns:2; column-gap:32px} }
+.sources li{break-inside:avoid; margin-bottom:6px}
+@media (prefers-reduced-motion: reduce){ *{transition:none!important; animation:none!important} }
+</style>
+
+<div class="shell">
+<nav class="toc" aria-label="Contents">
+  <div class="brand">Blan<i>arch</i></div>
+  <ol>
+    <li><a href="#picture"><span>01</span>The two halves</a></li>
+    <li><a href="#flutter"><span>02</span>Flutter, MVVM</a></li>
+    <li><a href="#bridge"><span>03</span>The bridge</a></li>
+    <li><a href="#engine"><span>04</span>Ports and adapters</a></li>
+    <li><a href="#trace"><span>05</span>Trace one tap</a></li>
+    <li><a href="#states"><span>06</span>The state machine</a></li>
+    <li><a href="#core"><span>07</span>Core and shell</a></li>
+    <li><a href="#concurrency"><span>08</span>Cancellation</a></li>
+    <li><a href="#wire"><span>09</span>On the wire</a></li>
+    <li><a href="#security"><span>10</span>Security</a></li>
+    <li><a href="#testing"><span>11</span>Testing</a></li>
+    <li><a href="#next"><span>12</span>What we build next</a></li>
+    <li><a href="#ipsec"><span>13</span>IPsec, explained</a></li>
+    <li><a href="#principles"><span>14</span>The principles</a></li>
+    <li><a href="#path"><span>15</span>Your learning path</a></li>
+    <li><a href="#sources"><span>16</span>Sources</a></li>
+  </ol>
+</nav>
+
+<main>
+<header class="hero">
+  <div class="kicker">Architecture handbook · Android client for FortiGate VPN</div>
+  <h1>Inside Blan<i>arch</i></h1>
+  <p class="lede">How the app is put together, why each piece exists, and how the next pieces (steady connections, clear “unsupported server” messages, and IPsec) fit into it. Every diagram names the real files, so you can open them as you read.</p>
+  <div class="legend" aria-label="Colour legend">
+    <b><i class="sw" style="background:var(--ui)"></i>Flutter UI</b>
+    <b><i class="sw" style="background:var(--bridge)"></i>Bridge (Pigeon)</b>
+    <b><i class="sw" style="background:var(--engine)"></i>Engine core</b>
+    <b><i class="sw" style="background:var(--adapter)"></i>Adapters (protocols, mail)</b>
+    <b><i class="sw" style="background:var(--android)"></i>Android system</b>
+  </div>
+  <div class="verify">
+    <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2l8 3v6c0 5-3.4 9.4-8 11-4.6-1.6-8-6-8-11V5z" fill="var(--ok)"/><path d="M8.5 12l2.4 2.4L15.5 9.8" fill="none" stroke="var(--surface)" stroke-width="2.2" stroke-linecap="round"/></svg>
+    <p>Every claim about a pattern, API or protocol was checked against its original source (official docs, the author, or the RFC) on 28 Sep 2026. Where an earlier explanation was imprecise, the page says so in a red note. Sources are listed at the end.</p>
+  </div>
+</header>
+
+<!-- 01 -->
+<section id="picture">
+  <div class="sec-head"><span class="num">01</span><h2>Two programs in one app</h2>
+    <p class="prose">Blanarch is a Flutter app for what you see and a Kotlin engine for what the phone does. They talk through a typed contract. The UI never knows how a VPN works, and the engine never knows what a screen looks like.</p></div>
+  <div class="bigpic">
+    <div class="half flutter">
+      <h4>Flutter · Dart</h4>
+      <ul><li>Screens, animation, text in English and Spanish</li><li>One codebase for Android now and iOS later</li><li>Golden screenshot tests for every screen</li><li>Can be closed at any time; the VPN keeps running</li></ul>
+    </div>
+    <div class="pipe"><div class="bar">Pigeon</div><div class="arrows">commands →<br>← status, log</div></div>
+    <div class="half kotlin">
+      <h4>Kotlin · Android</h4>
+      <ul><li><code>VpnService</code>: owns the phone's traffic</li><li>Keystore, notifications, Quick Settings tile</li><li>A foreground service that outlives the UI</li><li>TLS, HTTP, PPP, IMAP: the protocol work</li></ul>
+    </div>
+  </div>
+  <p class="prose muted">Why split it: Android lets only a <code>VpnService</code> create the virtual network card and keep running when the screen is gone. That belongs in native code. Flutter is best at drawing. Each side does what it is good at, and neither can reach into the other.</p>
+</section>
+
+<!-- 02 -->
+<section id="flutter">
+  <div class="sec-head"><span class="num">02</span><h2>The Flutter side: MVVM</h2>
+    <p class="prose">This follows Flutter's official architecture guide: a UI layer (views and view-models) and a data layer (repositories and services), with an optional domain layer that most apps don't need. Pick a layer to see its job and its files.</p></div>
+  <div class="explorer">
+    <div class="stack" role="group" aria-label="Flutter layers">
+      <div class="flowtag">intent flows down ↓ · state flows up ↑</div>
+      <button class="layer-btn" data-layer="view" aria-pressed="true"><i class="dot" style="background:var(--ui)"></i><span><span class="t">View</span><br><span class="s">widgets that draw state</span></span><span class="k">UI layer</span></button>
+      <button class="layer-btn" data-layer="vm" aria-pressed="false"><i class="dot" style="background:var(--ui)"></i><span><span class="t">ViewModel</span><br><span class="s">screen state + Commands</span></span><span class="k">UI layer</span></button>
+      <button class="layer-btn" data-layer="repo" aria-pressed="false"><i class="dot" style="background:var(--adapter)"></i><span><span class="t">Repository</span><br><span class="s">single source of truth</span></span><span class="k">data layer</span></button>
+      <button class="layer-btn" data-layer="service" aria-pressed="false"><i class="dot" style="background:var(--bridge)"></i><span><span class="t">Service</span><br><span class="s">wraps the platform API</span></span><span class="k">data layer</span></button>
+      <button class="layer-btn" data-layer="root" aria-pressed="false"><i class="dot" style="background:var(--muted)"></i><span><span class="t">Composition root</span><br><span class="s">wires everything once</span></span><span class="k">config</span></button>
+    </div>
+    <div class="panel detail" id="layerDetail" aria-live="polite"></div>
+  </div>
+  <div class="note fix"><b>Correction.</b> Flutter's guide <em>strongly recommends</em> MVVM, repositories and dependency injection, and <em>recommends</em> Commands one level lower. <code>Result</code> is a design-pattern page in the guide, not a formal recommendation. Flutter ships neither class; Blanarch has its own in <code>lib/utils/</code>. <span class="cite"><a href="https://docs.flutter.dev/app-architecture/recommendations">Flutter recommendations</a> · <a href="https://docs.flutter.dev/app-architecture/design-patterns/result">Result pattern</a></span></div>
+  <div class="panel">
+    <h3 style="margin-bottom:12px">Unidirectional data flow, drawn</h3>
+    <div class="scroll-x">
+    <svg viewBox="0 0 880 170" role="img" aria-label="Taps go down from the view to the engine; status comes back up from the engine to the view" style="width:100%;min-width:640px;height:auto">
+      <defs><marker id="ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="var(--muted)"/></marker></defs>
+      <g font-family="var(--sans)" font-size="14" text-anchor="middle">
+        <rect x="10" y="55" width="140" height="56" rx="12" fill="var(--ui-t)" stroke="var(--ui)"/><text x="80" y="88" fill="var(--ink)">View</text>
+        <rect x="190" y="55" width="140" height="56" rx="12" fill="var(--ui-t)" stroke="var(--ui)"/><text x="260" y="88" fill="var(--ink)">ViewModel</text>
+        <rect x="370" y="55" width="140" height="56" rx="12" fill="var(--adapter-t)" stroke="var(--adapter)"/><text x="440" y="88" fill="var(--ink)">Repository</text>
+        <rect x="550" y="55" width="140" height="56" rx="12" fill="var(--bridge-t)" stroke="var(--bridge)"/><text x="620" y="88" fill="var(--ink)">Service → Pigeon</text>
+        <rect x="730" y="55" width="140" height="56" rx="12" fill="var(--engine-t)" stroke="var(--engine)"/><text x="800" y="88" fill="var(--ink)">Kotlin engine</text>
+      </g>
+      <g stroke="var(--muted)" stroke-width="1.6" fill="none" marker-end="url(#ah)">
+        <path d="M80 50 C 80 20, 790 20, 790 50"/>
+        <path d="M810 116 C 810 150, 90 150, 90 116"/>
+      </g>
+      <g font-family="var(--mono)" font-size="12" fill="var(--muted)" text-anchor="middle">
+        <text x="440" y="16">intent: tap → command → repository.connect() → connect(profileId)</text>
+        <text x="440" y="166">state: onStatus(VpnStatusMsg) → VpnStatus → notifyListeners() → rebuild</text>
+      </g>
+    </svg>
+    </div>
+    <p class="prose muted" style="margin-top:10px">The UI never sets “connected”. It asks the engine to connect, and it shows whatever the engine reports. That is why the screen cannot claim “Connected” while the tunnel is down.</p>
+  </div>
+</section>
+
+<!-- 03 -->
+<section id="bridge">
+  <div class="sec-head"><span class="num">03</span><h2>The bridge: Pigeon</h2>
+    <p class="prose">A contract written once in Dart, <code>pigeons/vpn_api.dart</code>, generates matching Dart and Kotlin code. Pigeon is published by the Flutter team and sits on top of platform channels, adding types.</p></div>
+  <div class="two">
+    <div class="panel" style="display:flex;flex-direction:column;gap:10px">
+      <h3>HostApi <span class="muted" style="font-family:var(--sans);font-size:15px">Dart calls Kotlin</span></h3>
+      <p class="mono" style="font-size:13px;line-height:1.8">connect(profileId) · disconnect() · submitOtp(code)<br>probe(address) · saveProfile(p) · useCodeThisTime()<br>shareText(subject, text) · requestAddTile(always)</p>
+      <p class="cite">Implemented in <code>bridge/VpnBridge.kt</code>, which only translates and forwards.</p>
+    </div>
+    <div class="panel" style="display:flex;flex-direction:column;gap:10px">
+      <h3>FlutterApi <span class="muted" style="font-family:var(--sans);font-size:15px">Kotlin calls Dart</span></h3>
+      <p class="mono" style="font-size:13px;line-height:1.8">onStatus(VpnStatusMsg) · onLog(LogEntryMsg)<br>onProfilesChanged(list) · onSetupLink(url)</p>
+      <p class="cite">Received in <code>lib/data/services/vpn_platform.dart</code> and turned into domain models.</p>
+    </div>
+  </div>
+  <p class="prose muted">Why not hand-written channels: they pass untyped maps, so a typo only fails on a user's phone. With a generated contract the compiler catches it. That is also why the generated <code>*.g.dart</code> and <code>*.g.kt</code> files are never edited by hand. <span class="cite"><a href="https://pub.dev/packages/pigeon">pub.dev/packages/pigeon</a></span></p>
+</section>
+
+<!-- 04 -->
+<section id="engine">
+  <div class="sec-head"><span class="num">04</span><h2>The engine: ports and adapters</h2>
+    <p class="prose">Alistair Cockburn described this in 2005 as hexagonal architecture. The application defines <b>ports</b> (interfaces for what it needs) and the outside world plugs in <b>adapters</b> (real implementations). Blanarch's ports live in one file, <code>vpn/Ports.kt</code>.</p></div>
+  <div class="panel hexwrap">
+    <svg viewBox="0 0 880 470" role="img" aria-label="The orchestrator in a hexagon, surrounded by ports, each connected to an adapter">
+      <defs><marker id="ah2" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0L10 5L0 10z" fill="var(--outline)"/></marker></defs>
+      <polygon points="440,70 610,165 610,325 440,420 270,325 270,165" fill="var(--engine-t)" stroke="var(--engine)" stroke-width="2"/>
+      <text x="440" y="225" text-anchor="middle" font-family="var(--serif)" font-size="30" fill="var(--ink)">ConnectionOrchestrator</text>
+      <text x="440" y="252" text-anchor="middle" font-size="13" fill="var(--muted)">the connection sequence, as one state machine</text>
+      <text x="440" y="274" text-anchor="middle" font-size="13" fill="var(--muted)">retry · failover · sign-in · rejoin · fail</text>
+      <text x="440" y="300" text-anchor="middle" class="mono" font-size="11.5" fill="var(--outline)">vpn/ConnectionOrchestrator.kt</text>
+      <g font-size="12.5" text-anchor="middle">
+        <!-- ports -->
+        <g><rect x="352" y="40" width="176" height="30" rx="8" fill="var(--surface)" stroke="var(--engine)"/><text x="440" y="60" class="mono">GatewayFactory → VpnGateway</text></g>
+        <g><rect x="598" y="138" width="130" height="30" rx="8" fill="var(--surface)" stroke="var(--engine)"/><text x="663" y="158" class="mono">OtpSessionFactory</text></g>
+        <g><rect x="598" y="318" width="130" height="30" rx="8" fill="var(--surface)" stroke="var(--engine)"/><text x="663" y="338" class="mono">TunFactory</text></g>
+        <g><rect x="376" y="418" width="128" height="30" rx="8" fill="var(--surface)" stroke="var(--engine)"/><text x="440" y="438" class="mono">StatusStore</text></g>
+        <g><rect x="152" y="318" width="130" height="30" rx="8" fill="var(--surface)" stroke="var(--engine)"/><text x="217" y="338" class="mono">SsoCallback</text></g>
+        <g><rect x="152" y="138" width="130" height="30" rx="8" fill="var(--surface)" stroke="var(--engine)"/><text x="217" y="158" class="mono">PacketLink</text></g>
+      </g>
+      <g font-size="12.5">
+        <!-- adapters -->
+        <g><rect x="560" y="10" width="240" height="46" rx="10" fill="var(--adapter-t)" stroke="var(--adapter)"/><text x="572" y="30" font-weight="600" fill="var(--ink)">SslVpnGateway</text><text x="572" y="47" class="mono" font-size="11" fill="var(--muted)">sslvpn/ · TLS, HTTPS login</text></g>
+        <g><rect x="740" y="120" width="130" height="66" rx="10" fill="var(--adapter-t)" stroke="var(--adapter)"/><text x="752" y="140" font-weight="600" fill="var(--ink)">OtpSessions</text><text x="752" y="157" class="mono" font-size="11" fill="var(--muted)">otp/ + mail/</text><text x="752" y="174" class="mono" font-size="11" fill="var(--muted)">IMAP, MIME</text></g>
+        <g><rect x="740" y="300" width="130" height="66" rx="10" fill="var(--android-t)" stroke="var(--android)"/><text x="752" y="320" font-weight="600" fill="var(--ink)">AndroidTun</text><text x="752" y="337" class="mono" font-size="11" fill="var(--muted)">VpnService</text><text x="752" y="354" class="mono" font-size="11" fill="var(--muted)">.Builder</text></g>
+        <g><rect x="10" y="300" width="130" height="66" rx="10" fill="var(--adapter-t)" stroke="var(--adapter)"/><text x="22" y="320" font-weight="600" fill="var(--ink)">Loopback</text><text x="22" y="337" class="mono" font-size="11" fill="var(--muted)">sso/ · listens on</text><text x="22" y="354" class="mono" font-size="11" fill="var(--muted)">127.0.0.1:8020</text></g>
+        <g><rect x="10" y="120" width="130" height="66" rx="10" fill="var(--adapter-t)" stroke="var(--adapter)"/><text x="22" y="140" font-weight="600" fill="var(--ink)">SslVpnLink</text><text x="22" y="157" class="mono" font-size="11" fill="var(--muted)">frames + PPP</text><text x="22" y="174" class="mono" font-size="11" fill="var(--muted)">packet pump</text></g>
+        <g><rect x="560" y="420" width="250" height="46" rx="10" fill="var(--ui-t)" stroke="var(--ui)"/><text x="572" y="440" font-weight="600" fill="var(--ink)">UI · notification · tile</text><text x="572" y="457" class="mono" font-size="11" fill="var(--muted)">all observe the same status</text></g>
+      </g>
+      <g stroke="var(--outline)" stroke-width="1.4" fill="none" stroke-dasharray="4 4" marker-end="url(#ah2)">
+        <path d="M528 50 L558 38"/><path d="M728 153 L738 153"/><path d="M728 333 L738 333"/><path d="M152 333 L142 333"/><path d="M152 153 L142 153"/><path d="M504 440 L558 442"/>
+      </g>
+    </svg>
+  </div>
+  <div class="two">
+    <div class="prose"><h3>Why this shape pays off</h3>
+      <p><b>Dependency inversion.</b> The orchestrator (high-level policy) depends on interfaces, not on sockets or Android. In Robert C. Martin's words: high-level modules should not depend on low-level modules; both should depend on abstractions.</p>
+      <p><b>Testing without a phone.</b> <code>ConnectionOrchestratorTest</code> swaps every adapter for a fake and runs wrong-password, failover, certificate and drop scenarios in milliseconds.</p>
+      <p><b>Open for extension.</b> IPsec will be a new adapter behind the same ports. The orchestrator and the screens do not change. That is the open/closed principle.</p>
+    </div>
+    <div class="prose"><h3>Two kinds of ports</h3>
+      <p>Cockburn separates <b>driving</b> ports (something calls the app, like the service starting a connection) from <b>driven</b> ports (the app calls out, like signing in to a gateway). Everything in <code>Ports.kt</code> is a driven port. The service and the bridge are the driving side.</p>
+      <p class="cite"><a href="https://alistair.cockburn.us/hexagonal-architecture/">Cockburn, Hexagonal Architecture (2005)</a> · <a href="https://blog.cleancoder.com/uncle-bob/2014/05/12/TheOpenClosedPrinciple.html">Martin, The Open/Closed Principle</a></p>
+    </div>
+  </div>
+</section>
+
+<!-- 05 -->
+<section id="trace">
+  <div class="sec-head"><span class="num">05</span><h2>Trace one tap</h2>
+    <p class="prose">Follow a single tap on the connect button until packets flow. Step through it; the lit box is where the work happens at that moment.</p></div>
+  <div class="trace">
+    <div class="panel scroll-x">
+      <div class="lanes" id="lanes">
+        <div class="lane l1"><h5>Flutter UI</h5>
+          <div class="node" data-s="0">Tap the button<span class="f">home_screen.dart</span></div>
+          <div class="node" data-s="1">toggle command runs<span class="f">home_view_model.dart</span></div>
+          <div class="node" data-s="9">Screen glides to “Connected”<span class="f">home_screen.dart</span></div>
+        </div>
+        <div class="lane l2"><h5>Bridge</h5>
+          <div class="node" data-s="2">connect(profileId)<span class="f">vpn_platform.dart → VpnApi.g</span></div>
+          <div class="node" data-s="3">consent, unlock, start service<span class="f">VpnBridge.kt · MainActivity.kt</span></div>
+          <div class="node" data-s="8">onStatus(...)<span class="f">VpnBridge.kt</span></div>
+        </div>
+        <div class="lane l3"><h5>Engine core</h5>
+          <div class="node" data-s="4">Foreground service starts<span class="f">VpnTunnelService.kt</span></div>
+          <div class="node" data-s="5">run(profile, credentials)<span class="f">ConnectionOrchestrator.kt</span></div>
+          <div class="node" data-s="8">status.update { copy(...) }<span class="f">StatusStore.kt</span></div>
+        </div>
+        <div class="lane l4"><h5>Adapters</h5>
+          <div class="node" data-s="6">TLS + login + code<span class="f">SslVpnGateway · OtpSessions</span></div>
+          <div class="node" data-s="7">tunnel, PPP up<span class="f">SslVpnLink · PppNegotiator</span></div>
+        </div>
+        <div class="lane l5"><h5>Android</h5>
+          <div class="node" data-s="3">VPN permission dialog<span class="f">VpnService.prepare</span></div>
+          <div class="node" data-s="7">TUN card created<span class="f">AndroidTun · establish()</span></div>
+          <div class="node" data-s="9">Notification, tile update<span class="f">VpnNotifications</span></div>
+        </div>
+      </div>
+    </div>
+    <div class="panel stepper" aria-live="polite">
+      <div class="progress" id="traceProg"></div>
+      <span class="count" id="traceCount"></span>
+      <h4 id="traceTitle"></h4>
+      <p class="body" id="traceBody"></p>
+      <div class="ctrl"><button class="btn ghost" id="tPrev">Back</button><button class="btn primary" id="tNext">Next step</button></div>
+    </div>
+  </div>
+</section>
+
+<!-- 06 -->
+<section id="states">
+  <div class="sec-head"><span class="num">06</span><h2>The connection is a state machine</h2>
+    <p class="prose">One immutable <code>VpnStatus</code> snapshot, one phase at a time (<code>state/VpnStatus.kt</code>). Every change is <code>status.update { it.copy(...) }</code>, so nobody ever reads a half-written state. Tap a phase.</p></div>
+  <div class="panel sm scroll-x">
+    <svg viewBox="0 0 900 300" role="img" aria-label="Connection phases and the transitions between them" id="smSvg">
+      <defs><marker id="ah3" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0L10 5L0 10z" fill="var(--outline)"/></marker></defs>
+      <g stroke="var(--outline)" stroke-width="1.5" fill="none" marker-end="url(#ah3)">
+        <path d="M110 150 L150 150"/><path d="M270 150 L310 150"/>
+        <path d="M450 138 L490 70"/><path d="M450 150 L490 150"/><path d="M450 162 L490 230"/>
+        <path d="M630 70 L660 138"/><path d="M630 150 L660 150"/><path d="M630 230 L660 162"/>
+        <path d="M790 150 L800 150"/>
+        <path d="M855 175 C 855 285, 520 285, 520 255"/>
+        <path d="M60 175 C 60 280, 380 280, 380 175"/>
+      </g>
+      <text x="690" y="286" font-size="11.5" fill="var(--muted)" text-anchor="middle">drop → RECONNECTING → rejoin with the cookie</text>
+      <text x="220" y="292" font-size="11.5" fill="var(--muted)" text-anchor="middle">fatal error or out of attempts → ERROR</text>
+      <g font-size="13" text-anchor="middle">
+        <g class="st" data-p="idle"><rect x="10" y="125" width="100" height="50" rx="12" fill="var(--surface)" stroke="var(--outline)"/><text x="60" y="155">IDLE</text></g>
+        <g class="st" data-p="connecting"><rect x="150" y="125" width="120" height="50" rx="12" fill="var(--bridge-t)" stroke="var(--busy)"/><text x="210" y="155">CONNECTING</text></g>
+        <g class="st" data-p="auth"><rect x="310" y="125" width="140" height="50" rx="12" fill="var(--bridge-t)" stroke="var(--busy)"/><text x="380" y="155">AUTHENTICATING</text></g>
+        <g class="st" data-p="otp"><rect x="490" y="45" width="140" height="50" rx="12" fill="var(--bridge-t)" stroke="var(--busy)"/><text x="560" y="75">WAITING_OTP</text></g>
+        <g class="st" data-p="push"><rect x="490" y="125" width="140" height="50" rx="12" fill="var(--bridge-t)" stroke="var(--busy)"/><text x="560" y="155">WAITING_PUSH</text></g>
+        <g class="st" data-p="sso"><rect x="490" y="205" width="140" height="50" rx="12" fill="var(--bridge-t)" stroke="var(--busy)"/><text x="560" y="235">WAITING_SSO</text></g>
+        <g class="st" data-p="neg"><rect x="660" y="125" width="130" height="50" rx="12" fill="var(--bridge-t)" stroke="var(--busy)"/><text x="725" y="155">NEGOTIATING</text></g>
+        <g class="st" data-p="up"><rect x="800" y="125" width="95" height="50" rx="12" fill="var(--engine-t)" stroke="var(--ok)"/><text x="847" y="155">CONNECTED</text></g>
+        <g class="st" data-p="error"><rect x="330" y="200" width="100" height="44" rx="12" fill="var(--android-t)" stroke="var(--bad)"/><text x="380" y="227">ERROR</text></g>
+      </g>
+    </svg>
+  </div>
+  <div class="panel sm-info" id="smInfo" aria-live="polite"></div>
+  <p class="prose muted">Errors are data, not text: <code>ErrorCode</code> is a closed enum with a <code>fatal</code> flag. The orchestrator decides from the flag (a wrong password stops at once; an unreachable server retries), and the UI turns codes into sentences in <code>vpn_texts.dart</code>. Nothing ever matches on error wording, because wording changes and translations differ.</p>
+</section>
+
+<!-- 07 -->
+<section id="core">
+  <div class="sec-head"><span class="num">07</span><h2>Functional core, imperative shell</h2>
+    <p class="prose">Gary Bernhardt named this in 2012. Hard logic lives in pure functions that take values and return values. A thin outer shell does the I/O and calls them.</p></div>
+  <div class="two">
+    <div class="panel rings">
+      <svg viewBox="0 0 520 420" role="img" aria-label="Pure protocol logic in the centre, surrounded by a thin I/O shell">
+        <circle cx="260" cy="210" r="195" fill="var(--adapter-t)" stroke="var(--adapter)" stroke-width="2"/>
+        <circle cx="260" cy="210" r="128" fill="var(--engine-t)" stroke="var(--engine)" stroke-width="2"/>
+        <text x="260" y="40" text-anchor="middle" font-size="13" fill="var(--muted)" font-family="var(--sans)">SHELL · sockets, clock, Android</text>
+        <text x="260" y="66" text-anchor="middle" font-size="12" fill="var(--adapter)" font-family="var(--mono)">SslVpnGateway · SslVpnLink</text>
+        <text x="260" y="118" text-anchor="middle" font-size="13" fill="var(--muted)" font-family="var(--sans)">CORE · bytes in, values out</text>
+        <g font-family="var(--mono)" font-size="13" fill="var(--ink)" text-anchor="middle">
+          <text x="260" y="162">LoginProtocol</text><text x="260" y="190">TunnelXml</text><text x="260" y="218">FrameCodec</text><text x="260" y="246">PppNegotiator</text><text x="260" y="274">Mime · OtpMatcher</text><text x="260" y="302">Routes · Address</text>
+        </g>
+      </svg>
+    </div>
+    <div class="prose">
+      <p><b>Pure core.</b> <code>LoginProtocol.classifyStep1(response)</code> takes a reply and returns what it means. <code>PppNegotiator</code> even takes <code>now</code> as a parameter instead of reading the clock, so its timers are testable.</p>
+      <p><b>Thin shell.</b> <code>SslVpnGateway</code> opens the socket, sends the request, hands the bytes to the core, and acts on the answer. Little is left to go wrong there.</p>
+      <p><b>Proof from this week.</b> The gateway answered a wrong password with its HTML login page. We reproduced the exact reply in a pure unit test (<code>RealGatewayReplyTest</code>) in seconds, fixed the core, and never needed the network to prove it.</p>
+      <p class="cite"><a href="https://www.destroyallsoftware.com/screencasts/catalog/functional-core-imperative-shell">Bernhardt, Functional Core, Imperative Shell (2012)</a> · <a href="https://www.destroyallsoftware.com/talks/boundaries">Boundaries talk</a></p>
+    </div>
+  </div>
+</section>
+
+<!-- 08 -->
+<section id="concurrency">
+  <div class="sec-head"><span class="num">08</span><h2>Disconnect = cancel one job</h2>
+    <p class="prose">Kotlin coroutines use structured concurrency: every task is a child of the one that started it, and cancelling a parent cancels all its children. The service runs the whole connection as one job, so “Disconnect” is a single <code>job.cancel()</code>.</p></div>
+  <div class="panel tree scroll-x">
+    <svg viewBox="0 0 860 250" role="img" aria-label="The connection job and its children; cancelling it cancels all of them">
+      <g font-family="var(--sans)" font-size="13" text-anchor="middle">
+        <rect x="330" y="14" width="200" height="46" rx="12" fill="var(--engine-t)" stroke="var(--engine)"/><text x="430" y="36" fill="var(--ink)" font-weight="600">connection job</text><text x="430" y="52" fill="var(--muted)" font-size="11.5" font-family="var(--mono)">VpnTunnelService.scope</text>
+        <g stroke="var(--outline)" stroke-width="1.4" fill="none"><path d="M430 60 L100 110"/><path d="M430 60 L310 110"/><path d="M430 60 L540 110"/><path d="M430 60 L760 110"/><path d="M540 156 L470 196"/><path d="M540 156 L620 196"/></g>
+        <rect x="20" y="110" width="160" height="46" rx="10" fill="var(--surface)" stroke="var(--border)"/><text x="100" y="138">retry delay</text>
+        <rect x="230" y="110" width="160" height="46" rx="10" fill="var(--surface)" stroke="var(--border)"/><text x="310" y="138">IMAP code poll</text>
+        <rect x="460" y="110" width="160" height="46" rx="10" fill="var(--surface)" stroke="var(--border)"/><text x="540" y="138">tunnel pump</text>
+        <rect x="680" y="110" width="160" height="46" rx="10" fill="var(--surface)" stroke="var(--border)"/><text x="760" y="138">SSO wait</text>
+        <rect x="390" y="196" width="160" height="42" rx="10" fill="var(--surface)" stroke="var(--border)"/><text x="470" y="222">socket reader</text>
+        <rect x="560" y="196" width="160" height="42" rx="10" fill="var(--surface)" stroke="var(--border)"/><text x="640" y="222">stats every 1 s</text>
+      </g>
+    </svg>
+  </div>
+  <div class="two">
+    <div class="prose"><h3>The one trap</h3>
+      <p>Cancellation is <em>cooperative</em>: a coroutine only stops at a suspension point. A blocking <code>Socket.read()</code> never suspends, so it would ignore the cancel and hang.</p>
+      <p><code>net/Io.kt</code>'s <code>cancellableIo</code> closes the socket when the job is cancelled. The blocked read then throws, and everything unwinds. That is why the project rule says all socket work goes through it.</p>
+    </div>
+    <div class="note fix" style="align-self:start"><b>Correction worth knowing.</b> Kotlin's docs offer <code>runInterruptible()</code> for blocking calls, but a thread interrupt does <em>not</em> wake a classic <code>java.net.Socket</code> read (it only affects NIO interruptible channels). Closing the socket is the correct fix, which is exactly what Blanarch does. Also: <code>withContext(NonCancellable)</code> is for cleanup in <code>finally</code> (our polite logout), never for launching new work. <span class="cite"><a href="https://kotlinlang.org/docs/cancellation-and-timeouts.html">kotlinlang.org · Cancellation and timeouts</a></span></div>
+  </div>
+  <div class="prose"><h3>One source of truth for status</h3>
+    <p><code>StatusStore</code> holds a <code>StateFlow&lt;VpnStatus&gt;</code>. A StateFlow always has a value, gives new listeners the latest one, and <code>update { }</code> is atomic. The Flutter screen, the notification and the Quick Settings tile all watch the same store, so they can never disagree.</p>
+    <p class="muted">Two details: the <code>update</code> lambda can run more than once under contention, so it must be pure (it is: just <code>copy</code>). And StateFlow is for state, not events: equal values are not re-sent, and a slow listener can skip steps. That is why the log is a separate stream. <span class="cite"><a href="https://kotlinlang.org/api/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines.flow/-state-flow/">StateFlow API</a></span></p>
+  </div>
+</section>
+
+<!-- 09 -->
+<section id="wire">
+  <div class="sec-head"><span class="num">09</span><h2>What travels on the wire</h2>
+    <p class="prose">A FortiGate SSL-VPN connection is a stack of layers. Tap a layer to see what it carries and which Blanarch method handles it.</p></div>
+  <div class="wire">
+    <div class="wstack" role="group" aria-label="Protocol layers, bottom to top">
+      <button class="wlayer" data-w="tcp" aria-pressed="false"><span>TCP to the gateway</span><span class="p">SocketFactory.tcp</span></button>
+      <button class="wlayer" data-w="tls" aria-pressed="false"><span>TLS with the pinned certificate</span><span class="p">PinningTrustManager</span></button>
+      <button class="wlayer" data-w="login" aria-pressed="true"><span>HTTPS sign-in</span><span class="p">login()</span></button>
+      <button class="wlayer" data-w="xml" aria-pressed="false"><span>Tunnel settings</span><span class="p">fetchTunnelConfig()</span></button>
+      <button class="wlayer" data-w="tunnel" aria-pressed="false"><span>Tunnel request, frames</span><span class="p">openLink()</span></button>
+      <button class="wlayer" data-w="ppp" aria-pressed="false"><span>PPP: LCP then IPCP</span><span class="p">negotiate()</span></button>
+      <button class="wlayer" data-w="ip" aria-pressed="false"><span>Your IP packets</span><span class="p">pump()</span></button>
+    </div>
+    <div class="panel" id="wireInfo" aria-live="polite" style="display:flex;flex-direction:column;gap:12px"></div>
+  </div>
+  <div class="note"><b>Where these details come from.</b> Fortinet publicly documents the session cookie (<code>SVPNCOOKIE</code>) and that SSL-VPN tunnels over TLS. The login endpoint, the settings XML and the PPP framing are <em>not</em> in Fortinet's public docs. Blanarch's spec (<code>docs/protocol/fortigate-sslvpn.md</code>) describes them from observed traffic of our own client, and PPP itself is public (RFC 1661, 1332, 1877). This is the clean-room record in <code>PROVENANCE.md</code>.</div>
+</section>
+
+<!-- 10 -->
+<section id="security">
+  <div class="sec-head"><span class="num">10</span><h2>Security by design</h2></div>
+  <div class="cards">
+    <div class="card"><h4>Secrets</h4>
+      <p>Passwords are encrypted with an Android Keystore key. Keystore keys cannot be exported, and on most phones they live in secure hardware (TEE or StrongBox).</p>
+      <p>With app lock on, the key is usable only for 60 s after a fingerprint, face or screen-lock check (<code>setUserAuthenticationParameters</code>, Android 11+).</p>
+      <p class="cite">Nuance: removing the phone's screen lock permanently invalidates such keys, so the app must handle <code>KeyPermanentlyInvalidatedException</code> and ask for the password again.</p>
+    </div>
+    <div class="card"><h4>Server identity</h4>
+      <p>Company gateways often use self-signed certificates, and FortiClient's yes/no warning trains people to click through.</p>
+      <p>Blanarch shows the fingerprint once, then pins its SHA-256 per server and blocks loudly if it ever changes.</p>
+      <p class="cite">This model is trust on first use. OWASP notes the first connection is the weak point, so a fingerprint delivered out of band (the setup link or QR code) is best. A leaf pin breaks when the certificate is renewed; the app then shows the change and asks.</p>
+    </div>
+    <div class="card"><h4>Clean room</h4>
+      <p>The protocol engine was written from our own written spec, never from GPL code, and every step is recorded in <code>PROVENANCE.md</code>. That keeps the App Store open to us.</p>
+      <p>Rule for every change: spec first, then code, then a provenance line. We followed it for this week's wrong-password fix.</p>
+      <p class="cite">Crypto rule: never write cryptographic primitives yourself. OWASP: “Don't implement your own cryptographic protocols or routines.” We write protocol logic around vetted libraries.</p>
+    </div>
+  </div>
+</section>
+
+<!-- 11 -->
+<section id="testing">
+  <div class="sec-head"><span class="num">11</span><h2>Testing: a pyramid</h2>
+    <p class="prose">Many fast tests at the bottom, few slow ones at the top. Mike Cohn popularized the shape in 2009.</p></div>
+  <div class="pyr">
+    <svg viewBox="0 0 420 330" role="img" aria-label="Test pyramid: many unit tests, fewer view-model tests, fewer golden tests, few device checks">
+      <g font-family="var(--sans)" text-anchor="middle">
+        <polygon points="210,10 262,82 158,82" fill="var(--android-t)" stroke="var(--android)"/><text x="210" y="70" font-size="12" fill="var(--ink)">device</text>
+        <polygon points="158,90 262,90 314,162 106,162" fill="var(--ui-t)" stroke="var(--ui)"/><text x="210" y="132" font-size="13" fill="var(--ink)">golden screenshots</text>
+        <polygon points="106,170 314,170 366,242 54,242" fill="var(--adapter-t)" stroke="var(--adapter)"/><text x="210" y="212" font-size="13" fill="var(--ink)">view-model tests</text>
+        <polygon points="54,250 366,250 414,320 6,320" fill="var(--engine-t)" stroke="var(--engine)"/><text x="210" y="290" font-size="13" fill="var(--ink)">Kotlin unit tests: cores + orchestrator</text>
+      </g>
+    </svg>
+    <div class="prose">
+      <p><b>Cores</b> catch protocol mistakes. <b>Orchestrator tests with fakes</b> catch sequence mistakes. <b>View-model tests</b> (<code>FakeVpnPlatform</code>) catch UI logic mistakes. <b>Goldens</b> (<code>matchesGoldenFile</code>) catch visual regressions, in light, dark, English and Spanish.</p>
+      <p><b>The device</b> is the one thing fakes cannot give. That is why “Connected” was not claimed until you saw it on a real gateway.</p>
+      <p class="cite">Goldens depend on the OS and Flutter version (fonts render slightly differently), so they are regenerated only for intended changes and looked at before committing. <a href="https://martinfowler.com/bliki/TestPyramid.html">Fowler, Test Pyramid</a></p>
+    </div>
+  </div>
+</section>
+
+<!-- 12 -->
+<section id="next">
+  <div class="sec-head"><span class="num">12</span><h2>What we build next, and where it plugs in</h2>
+    <p class="prose">The order we agreed: steady connections first, then clear “unsupported server” messages, then IPsec. Each one lands in the architecture above without rewriting it.</p></div>
+  <div class="plan-grid">
+    <div class="plan"><span class="tag">Step 2 · new event source + policy</span><h4>Connections that survive drops</h4>
+      <ul>
+        <li><b>NetworkWatch</b> (new port): tells the orchestrator the moment Wi-Fi drops or switches, instead of waiting ~30 s for keepalives.</li>
+        <li><b>SessionPolicy</b> (pure, a strategy object): network changed → rejoin now; no network → new phase <code>WAITING_NETWORK</code>, no attempts burned; session expired → sign in again.</li>
+        <li><b>Automatic re-sign-in</b> with the saved password and the emailed code.</li>
+        <li><b>Inline reply</b> in the notification (<code>RemoteInput</code>, Android 7+) feeds the same code pipe the app uses.</li>
+        <li><b>Alerts:</b> “VPN dropped · reconnecting”, then “Reconnected”.</li>
+      </ul></div>
+    <div class="plan"><span class="tag">Step 4 · a smarter probe</span><h4>Say plainly what we can't serve</h4>
+      <ul>
+        <li>The setup probe also learns: SSL-VPN tunnel mode switched off (FortiOS 7.6.3+), the server answers IPsec, a client certificate is requested, a host check is required.</li>
+        <li>Each finding is an <code>ErrorCode</code>, so the cause, the fix and “what to tell IT” come through the existing error sheet.</li>
+        <li>The connection is still saved, ready for when IPsec lands.</li>
+      </ul></div>
+    <div class="plan"><span class="tag">Step 3 · a second adapter</span><h4>IPsec behind the same ports</h4>
+      <ul>
+        <li>New package <code>ipsec/</code>: IKEv2 for sign-in and keys, ESP for packets.</li>
+        <li>Same shape as <code>sslvpn/</code>: pure cores, thin shells.</li>
+        <li>A <b>ProtocolResolver</b> (factory) picks SSL-VPN or IPsec per profile or from the probe.</li>
+        <li>Spec first from public RFCs, then a FortiGate VM trial for traces.</li>
+      </ul></div>
+  </div>
+  <div class="note fix"><b>Correction to the drop plan.</b> I first wrote that we'd watch the “default network” and remove <code>NOT_VPN</code> from the request. That is backwards: requests include <code>NOT_VPN</code> by default, which already excludes VPNs. The right tool is <code>registerBestMatchingNetworkCallback</code> (Android 12+) with an internet request, which reports the single best real network. On older versions, <code>registerNetworkCallback</code> reports every matching network and the app picks one. We then tell Android with <code>setUnderlyingNetworks</code>. <span class="cite"><a href="https://developer.android.com/reference/android/net/ConnectivityManager#registerBestMatchingNetworkCallback(android.net.NetworkRequest,%20android.net.ConnectivityManager.NetworkCallback,%20android.os.Handler)">ConnectivityManager</a> · <a href="https://developer.android.com/reference/android/net/NetworkRequest.Builder">NetworkRequest.Builder</a></span></div>
+</section>
+
+<!-- 13 -->
+<section id="ipsec">
+  <div class="sec-head"><span class="num">13</span><h2>IPsec, explained from zero</h2>
+    <p class="prose">IPsec has two planes. The <b>control plane</b> (IKEv2, RFC 7296) signs you in and agrees on keys. The <b>data plane</b> (ESP, RFC 4303) encrypts every packet with those keys. They map neatly onto our ports.</p></div>
+  <div class="seq">
+    <div class="panel scroll-x">
+      <svg viewBox="0 0 560 520" role="img" aria-label="IKEv2 message sequence between the phone and the FortiGate" id="seqSvg">
+        <defs><marker id="ah4" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0L10 5L0 10z" fill="var(--ink)"/></marker></defs>
+        <g font-family="var(--sans)" text-anchor="middle">
+          <rect x="30" y="10" width="140" height="40" rx="10" fill="var(--ui-t)" stroke="var(--ui)"/><text x="100" y="35" font-size="14" fill="var(--ink)">Phone (initiator)</text>
+          <rect x="390" y="10" width="140" height="40" rx="10" fill="var(--adapter-t)" stroke="var(--adapter)"/><text x="460" y="35" font-size="14" fill="var(--ink)">FortiGate (responder)</text>
+        </g>
+        <g stroke="var(--border)" stroke-width="2"><line x1="100" y1="50" x2="100" y2="510"/><line x1="460" y1="50" x2="460" y2="510"/></g>
+        <g font-family="var(--mono)" font-size="12" fill="var(--ink)" stroke="var(--ink)">
+          <g class="msg" data-m="0"><line x1="100" y1="85" x2="456" y2="85" stroke-width="1.6" marker-end="url(#ah4)"/><text x="280" y="78" text-anchor="middle" stroke="none">IKE_SA_INIT: SA, KE, Ni</text></g>
+          <g class="msg" data-m="1"><line x1="460" y1="125" x2="104" y2="125" stroke-width="1.6" marker-end="url(#ah4)"/><text x="280" y="118" text-anchor="middle" stroke="none">SA, KE, Nr (+ NAT detection)</text></g>
+          <g class="msg" data-m="2"><line x1="100" y1="175" x2="456" y2="175" stroke-width="1.6" marker-end="url(#ah4)"/><text x="280" y="168" text-anchor="middle" stroke="none">IKE_AUTH: IDi, CP request, no AUTH</text></g>
+          <g class="msg" data-m="3"><line x1="460" y1="215" x2="104" y2="215" stroke-width="1.6" marker-end="url(#ah4)"/><text x="280" y="208" text-anchor="middle" stroke="none">IDr, CERT, AUTH, EAP request</text></g>
+          <g class="msg" data-m="4"><line x1="100" y1="255" x2="456" y2="255" stroke-width="1.6" marker-end="url(#ah4)"/><text x="280" y="248" text-anchor="middle" stroke="none">EAP response (username)</text></g>
+          <g class="msg" data-m="5"><line x1="460" y1="295" x2="104" y2="295" stroke-width="1.6" marker-end="url(#ah4)"/><text x="280" y="288" text-anchor="middle" stroke="none">EAP: challenge / token prompt</text></g>
+          <g class="msg" data-m="6"><line x1="100" y1="335" x2="456" y2="335" stroke-width="1.6" marker-end="url(#ah4)"/><text x="280" y="328" text-anchor="middle" stroke="none">EAP: password (+ code)</text></g>
+          <g class="msg" data-m="7"><line x1="460" y1="375" x2="104" y2="375" stroke-width="1.6" marker-end="url(#ah4)"/><text x="280" y="368" text-anchor="middle" stroke="none">EAP success</text></g>
+          <g class="msg" data-m="8"><line x1="100" y1="415" x2="456" y2="415" stroke-width="1.6" marker-end="url(#ah4)"/><text x="280" y="408" text-anchor="middle" stroke="none">AUTH (from the EAP key)</text></g>
+          <g class="msg" data-m="9"><line x1="460" y1="455" x2="104" y2="455" stroke-width="1.6" marker-end="url(#ah4)"/><text x="280" y="448" text-anchor="middle" stroke="none">AUTH, CP reply, SA, TSi, TSr</text></g>
+          <g class="msg" data-m="10"><line x1="100" y1="495" x2="456" y2="495" stroke-width="3" stroke="var(--ok)" stroke-dasharray="6 5"/><text x="280" y="488" text-anchor="middle" stroke="none" fill="var(--ok)">ESP packets both ways</text></g>
+        </g>
+      </svg>
+    </div>
+    <div class="panel stepper" aria-live="polite">
+      <span class="count" id="seqCount"></span>
+      <h4 id="seqTitle"></h4>
+      <p class="body" id="seqBody"></p>
+      <p class="cite" id="seqMap"></p>
+      <div class="ctrl"><button class="btn ghost" id="sPrev">Back</button><button class="btn primary" id="sNext">Next message</button></div>
+    </div>
+  </div>
+
+  <div class="panel esp">
+    <h3>Anatomy of one ESP packet</h3>
+    <p class="prose muted">Every packet leaving the phone is wrapped like this (RFC 4303). With AES-GCM (RFC 4106), encryption and integrity happen in one step. Tap a field.</p>
+    <div class="scroll-x"><div class="esp-row" role="group" aria-label="ESP packet fields">
+      <button class="hdr" data-e="spi" style="flex:1.2" aria-pressed="true">SPI<br>32 bit</button>
+      <button class="hdr" data-e="seq" style="flex:1.2" aria-pressed="false">Sequence<br>32 bit</button>
+      <button class="enc" data-e="iv" style="flex:1" aria-pressed="false">IV</button>
+      <button class="enc" data-e="payload" style="flex:4" aria-pressed="false">Your IP packet<br>(encrypted)</button>
+      <button class="enc" data-e="pad" style="flex:1.4" aria-pressed="false">Padding · length<br>· next header</button>
+      <button class="icv" data-e="icv" style="flex:1.2" aria-pressed="false">ICV<br>(tag)</button>
+    </div></div>
+    <div class="esp-legend"><span><i class="sw" style="background:var(--adapter)"></i> sent in the clear</span><span><i class="sw" style="background:var(--engine)"></i> encrypted</span><span><i class="sw" style="background:var(--bridge)"></i> integrity check</span></div>
+    <p id="espInfo" aria-live="polite" style="max-width:72ch"></p>
+  </div>
+
+  <div class="two">
+    <div class="prose"><h3>Getting through firewalls</h3>
+      <p><b>NAT traversal (RFC 3948).</b> Both sides hash their addresses into NAT_DETECTION notifications. If a router rewrote them, they move to UDP port 4500 and wrap ESP in UDP. Tiny one-byte keepalives hold the router's mapping open.</p>
+      <p><b>TCP when UDP is blocked.</b> IKE and ESP can ride a TCP stream that starts with the bytes <code>IKETCP</code>, each message prefixed by its length. This was RFC 8229; <b>RFC 9329 (2022) replaced it</b> with the same wire format. Fortinet's default TCP mode says it is “RFC 8229 compliant”, usually on port 443. Its other mode (<code>fortinet-esp</code>) is proprietary and only for FortiGate-to-FortiGate.</p>
+    </div>
+    <div class="prose"><h3>How Fortinet signs users in</h3>
+      <p>Dial-up IKEv2 authenticates users with <b>EAP</b> inside IKE_AUTH. Fortinet's KB says the default method is <b>EAP-MSCHAPv2</b>, and that MSCHAPv2 is required for users to see a FortiToken prompt or push. EAP-TTLS/PAP is supported for some directories. SAML for IKEv2 arrived in FortiOS 7.2.</p>
+      <p><b>Open questions for our spike:</b> how an emailed code is requested, and whether a given gateway authenticates itself with a certificate (as RFC 7296 requires with EAP) or with a pre-shared key, which Fortinet's own examples show.</p>
+      <p class="cite"><a href="https://community.fortinet.com/fortigate-3/technical-tip-fortios-ikev2-eap-user-authentication-operation-217759">Fortinet KB: IKEv2 EAP user authentication</a> · <a href="https://docs.fortinet.com/document/fortigate/7.6.6/administration-guide/351073/encapsulate-esp-packets-within-tcp-headers">Fortinet: ESP within TCP</a></p>
+    </div>
+  </div>
+
+  <div class="panel scroll-x">
+    <h3 style="margin-bottom:12px">Why our own engine, not Android's built-in IKEv2</h3>
+    <table>
+      <thead><tr><th>Need</th><th>Android <code>Ikev2VpnProfile</code></th><th>Blanarch engine</th></tr></thead>
+      <tbody>
+        <tr><td>IKE over TCP 443 (RFC 8229/9329)</td><td><span class="n">No</span> · no TCP option in the API</td><td><span class="y">Yes</span></td></tr>
+        <tr><td>Ask for a code or push mid-sign-in</td><td><span class="n">No</span> · credentials are fixed in the profile</td><td><span class="y">Yes</span> · our code, push and SSO screens</td></tr>
+        <tr><td>EAP methods</td><td><span class="m">MSCHAPv2, TTLS, SIM, AKA</span></td><td><span class="y">What Fortinet needs</span></td></tr>
+        <tr><td>Clear, specific errors</td><td><span class="n">Generic</span></td><td><span class="y">Our ErrorCode set</span></td></tr>
+        <tr><td>Effort</td><td><span class="y">Small</span></td><td><span class="n">Large</span> · months, in phases</td></tr>
+      </tbody>
+    </table>
+    <p class="cite" style="margin-top:10px">A workaround exists (typing the password with the code appended, as Fortinet suggests for native clients), but it cannot do push and still has no TCP. <a href="https://developer.android.com/reference/android/net/Ikev2VpnProfile.Builder">Ikev2VpnProfile.Builder</a></p>
+  </div>
+</section>
+
+<!-- 14 -->
+<section id="principles">
+  <div class="sec-head"><span class="num">14</span><h2>The principles, and where you'll see them</h2></div>
+  <div class="panel scroll-x">
+    <table>
+      <thead><tr><th>Principle</th><th>What it means</th><th>In Blanarch</th><th>Origin</th></tr></thead>
+      <tbody>
+        <tr><td><b>Separation of concerns</b></td><td>Each part has one job</td><td>View draws, VM decides, repo stores, bridge translates, orchestrator sequences, cores parse</td><td class="cite">Flutter guide</td></tr>
+        <tr><td><b>Dependency inversion</b></td><td>Policy depends on abstractions, not details</td><td><code>ConnectionOrchestrator</code> → <code>Ports.kt</code></td><td class="cite">Martin, 1996</td></tr>
+        <tr><td><b>Open/closed</b></td><td>Extend without modifying</td><td>IPsec as a new adapter</td><td class="cite">Meyer, 1988; Martin</td></tr>
+        <tr><td><b>Ports and adapters</b></td><td>The app defines interfaces; technology plugs in</td><td><code>vpn/Ports.kt</code>, <code>sslvpn/</code></td><td class="cite">Cockburn, 2005</td></tr>
+        <tr><td><b>Composition root</b></td><td>Wire everything in one place, near the entry point</td><td><code>dependencies.dart</code>, <code>BlanarchApplication.kt</code></td><td class="cite">Seemann, 2011</td></tr>
+        <tr><td><b>Single source of truth</b></td><td>One owner per piece of data</td><td>Repositories; <code>StatusStore</code></td><td class="cite">Flutter guide</td></tr>
+        <tr><td><b>Unidirectional data flow</b></td><td>State down, intent up</td><td>Engine → repo → VM → view</td><td class="cite">Flutter guide</td></tr>
+        <tr><td><b>Functional core</b></td><td>Pure logic inside, I/O outside</td><td><code>LoginProtocol</code>, <code>PppNegotiator</code></td><td class="cite">Bernhardt, 2012</td></tr>
+        <tr><td><b>Structured concurrency</b></td><td>Cancel the parent, cancel everything</td><td>Disconnect = one <code>cancel()</code></td><td class="cite">Kotlin docs</td></tr>
+        <tr><td><b>Errors as data</b></td><td>Closed codes, not strings</td><td><code>ErrorCode</code>, <code>Result&lt;T&gt;</code></td><td class="cite">Flutter Result pattern</td></tr>
+        <tr><td><b>Don't roll your own crypto</b></td><td>Use vetted primitives</td><td>JCA and vetted libraries only</td><td class="cite">OWASP</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <div class="gloss">
+    <div><b>SA · Security Association</b>An agreed set of keys and algorithms between two peers. IKE has one; each tunnel (Child SA) has one per direction.</div>
+    <div><b>SPI</b>A number in each ESP packet that says which SA's keys to use.</div>
+    <div><b>Diffie-Hellman (KE)</b>Two sides exchange public values and each computes the same secret, which never crosses the network.</div>
+    <div><b>prf+</b>RFC 7296's key expander: from one shared secret it derives all the separate keys (SK_e, SK_a, SK_d…).</div>
+    <div><b>EAP</b>A framework for sign-in methods (RFC 3748), carried inside IKE_AUTH.</div>
+    <div><b>CP · Configuration payload</b>How the gateway hands you an internal IP, DNS and advertised routes.</div>
+    <div><b>TS · Traffic selectors</b>The binding rule for which traffic may enter the tunnel.</div>
+    <div><b>TUN</b>The virtual network card Android gives a VPN app; raw IP packets in and out.</div>
+    <div><b>TCP</b>The reliable, ordered byte pipe between two computers. Not private on its own.</div>
+    <div><b>TLS</b>Encryption and server identity on top of TCP; the certificate proves who the server is.</div>
+    <div><b>PPP</b>Point-to-Point Protocol (RFC 1661): runs IP over one link and sets that link up. FortiGate SSL-VPN carries it inside TLS.</div>
+    <div><b>LCP</b>PPP's Link Control Protocol: agrees link options such as the MRU; its echo messages double as keepalives by convention.</div>
+    <div><b>IPCP</b>PPP's IP Control Protocol (RFC 1332): assigns the internal IP address and, with RFC 1877, the DNS servers.</div>
+    <div><b>MRU</b>Maximum Receive Unit: the largest packet one side accepts. Blanarch asks for 1354 bytes.</div>
+    <div><b>Pinning</b>Remembering a server's certificate hash and refusing any other.</div>
+  </div>
+</section>
+
+<!-- 15 -->
+<section id="path">
+  <div class="sec-head"><span class="num">15</span><h2>Your learning path</h2>
+    <p class="prose">About half a day to know the code, then two weekend exercises. Your ticks are saved in this browser.</p></div>
+  <div class="check" id="check">
+    <label><input type="checkbox" id="c1"><span><b>Read <code>CLAUDE.md</code> and the protocol spec §1 to §5.</b><br><span class="muted">What we build and what crosses the wire.</span></span></label>
+    <label><input type="checkbox" id="c2"><span><b>Read <code>vpn/Ports.kt</code>, then <code>ConnectionOrchestrator.kt</code>.</b><br><span class="muted">The whole engine in one sequence.</span></span></label>
+    <label><input type="checkbox" id="c3"><span><b>Read the test names in <code>ConnectionOrchestratorTest.kt</code>.</b><br><span class="muted">They read like a specification.</span></span></label>
+    <label><input type="checkbox" id="c4"><span><b>Read <code>LoginProtocol.kt</code> and <code>PppNegotiator.kt</code>.</b><br><span class="muted">What pure cores look like.</span></span></label>
+    <label><input type="checkbox" id="c5"><span><b>Follow a tap: <code>dependencies.dart</code> → <code>home_view_model.dart</code> → <code>home_screen.dart</code> → <code>vpn_api.dart</code>.</b></span></label>
+    <label><input type="checkbox" id="c6"><span><b>Exercise: write a fake scenario.</b><br><span class="muted">“The first two addresses time out, the third works.” Predict the log lines, then run it.</span></span></label>
+    <label><input type="checkbox" id="c7"><span><b>Exercise: read RFC 7296 §1.2 and §2.13 to §2.16.</b><br><span class="muted">The vocabulary of the IPsec work.</span></span></label>
+  </div>
+</section>
+
+<!-- 16 -->
+<section id="sources">
+  <div class="sec-head"><span class="num">16</span><h2>Sources</h2></div>
+  <ul class="sources">
+    <li><a href="https://docs.flutter.dev/app-architecture/guide">Flutter · Guide to app architecture</a></li>
+    <li><a href="https://docs.flutter.dev/app-architecture/recommendations">Flutter · Architecture recommendations</a></li>
+    <li><a href="https://docs.flutter.dev/app-architecture/design-patterns/command">Flutter · Command pattern</a> and <a href="https://docs.flutter.dev/app-architecture/design-patterns/result">Result pattern</a></li>
+    <li><a href="https://pub.dev/packages/pigeon">Pigeon on pub.dev</a></li>
+    <li><a href="https://alistair.cockburn.us/hexagonal-architecture/">Alistair Cockburn · Hexagonal Architecture (2005)</a></li>
+    <li><a href="https://www.destroyallsoftware.com/screencasts/catalog/functional-core-imperative-shell">Gary Bernhardt · Functional Core, Imperative Shell</a></li>
+    <li><a href="https://blog.ploeh.dk/2011/07/28/CompositionRoot/">Mark Seemann · Composition Root</a></li>
+    <li><a href="https://blog.cleancoder.com/uncle-bob/2014/05/12/TheOpenClosedPrinciple.html">Robert C. Martin · The Open/Closed Principle</a></li>
+    <li><a href="https://kotlinlang.org/docs/cancellation-and-timeouts.html">Kotlin · Cancellation and timeouts</a></li>
+    <li><a href="https://kotlinlang.org/api/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines.flow/-state-flow/">kotlinx.coroutines · StateFlow</a></li>
+    <li><a href="https://developer.android.com/reference/android/net/VpnService">Android · VpnService</a></li>
+    <li><a href="https://developer.android.com/reference/android/security/keystore/KeyGenParameterSpec.Builder">Android · KeyGenParameterSpec.Builder</a></li>
+    <li><a href="https://developer.android.com/develop/ui/views/notifications/build-notification#reply-action">Android · Direct reply notifications</a></li>
+    <li><a href="https://developer.android.com/reference/android/net/NetworkRequest.Builder">Android · NetworkRequest.Builder</a></li>
+    <li><a href="https://developer.android.com/reference/android/net/Ikev2VpnProfile.Builder">Android · Ikev2VpnProfile.Builder</a></li>
+    <li><a href="https://martinfowler.com/bliki/TestPyramid.html">Martin Fowler · Test Pyramid</a></li>
+    <li><a href="https://owasp.org/www-community/controls/Certificate_and_Public_Key_Pinning">OWASP · Certificate and Public Key Pinning</a></li>
+    <li><a href="https://devguide.owasp.org/en/04-design/02-web-app-checklist/08-protect-data/">OWASP Developer Guide · Protect data</a></li>
+    <li><a href="https://www.rfc-editor.org/rfc/rfc7296">RFC 7296 · IKEv2</a></li>
+    <li><a href="https://www.rfc-editor.org/rfc/rfc4303">RFC 4303 · ESP</a> · <a href="https://www.rfc-editor.org/rfc/rfc4106">RFC 4106 · AES-GCM in ESP</a></li>
+    <li><a href="https://www.rfc-editor.org/rfc/rfc3948">RFC 3948 · UDP encapsulation (NAT-T)</a></li>
+    <li><a href="https://www.rfc-editor.org/info/rfc9329">RFC 9329 · TCP encapsulation (replaces RFC 8229)</a></li>
+    <li><a href="https://www.rfc-editor.org/rfc/rfc1661">RFC 1661 · PPP</a> · RFC 1332 · IPCP · RFC 1877 · DNS options</li>
+    <li><a href="https://docs.fortinet.com/document/fortigate/7.6.4/fortios-release-notes/173430/ssl-vpn-tunnel-mode-replaced-with-ipsec-vpn">Fortinet · SSL VPN tunnel mode replaced with IPsec (7.6.3)</a></li>
+    <li><a href="https://docs.fortinet.com/document/fortigate/7.6.6/administration-guide/351073/encapsulate-esp-packets-within-tcp-headers">Fortinet · Encapsulate ESP packets within TCP</a></li>
+    <li><a href="https://community.fortinet.com/fortigate-3/technical-tip-fortios-ikev2-eap-user-authentication-operation-217759">Fortinet KB · IKEv2 EAP user authentication</a></li>
+  </ul>
+</section>
+</main>
+</div>
+
+<script>
+(function(){
+  // Flutter layer explorer
+  const layers = {
+    view:{t:'View', role:'Draws the current state and forwards taps. No business rules.', files:['home_screen.dart','setup_screen.dart','settings_screen.dart','widgets/*'], rule:'If you write an if about business rules in a widget, it belongs in the view-model.', ex:'The home screen reads vm.status.phase and draws the glide, the steps card or the facts card.'},
+    vm:{t:'ViewModel', role:'Holds the screen’s state and exposes Commands: toggle, submitOtp, useCodeInstead.', files:['home_view_model.dart','setup_view_model.dart','settings_view_model.dart','utils/command.dart'], rule:'A Command tracks running, error and result, so every button can show a spinner and disable itself without scattered booleans.', ex:'toggle.execute() decides between connect, disconnect, needs setup and needs password, and returns a Result.'},
+    repo:{t:'Repository', role:'The single source of truth for one kind of data. Returns Result<T> instead of throwing.', files:['vpn_repository.dart','profile_repository.dart','utils/result.dart'], rule:'Every screen reads the same repository, so they never disagree about the VPN status.', ex:'VpnRepository keeps the latest status and the log, and exposes them as streams.'},
+    service:{t:'Service', role:'A thin wrapper over something outside the app. Here: the Pigeon API to Kotlin.', files:['data/services/vpn_platform.dart','test/support/fake_vpn_platform.dart'], rule:'Tests swap in FakeVpnPlatform, so every screen and view-model runs without a phone.', ex:'PigeonVpnPlatform turns VpnStatusMsg into the domain VpnStatus.'},
+    root:{t:'Composition root', role:'The one place where concrete classes are created and wired together, near the app’s entry point.', files:['config/dependencies.dart','main.dart'], rule:'Nothing constructs its own dependencies, which is exactly what lets tests pass fakes in. Only apps have a composition root; libraries don’t (Seemann).', ex:'providers(platform) builds the repositories once and hands them to every view-model.'}
+  };
+  const detail = document.getElementById('layerDetail');
+  function showLayer(k){
+    const L = layers[k];
+    detail.innerHTML = '<h4>'+L.t+'</h4><p class="role">'+L.role+'</p><dl><dt>Rule</dt><dd>'+L.rule+'</dd><dt>Example</dt><dd>'+L.ex+'</dd></dl><div class="chips">'+L.files.map(f=>'<span class="chip">'+f+'</span>').join('')+'</div>';
+    document.querySelectorAll('.layer-btn').forEach(b=>b.setAttribute('aria-pressed', String(b.dataset.layer===k)));
+  }
+  document.querySelectorAll('.layer-btn').forEach(b=>b.addEventListener('click',()=>showLayer(b.dataset.layer)));
+  showLayer('view');
+
+  // Trace a tap
+  const steps = [
+    ['You tap the button','The view does nothing clever: it calls vm.toggle.execute(). The button disables itself while the command runs.'],
+    ['The view-model decides','No connection yet, a profile is selected and it has a password, so the intent is “connect”. It calls the repository, which calls the platform service.'],
+    ['Across the bridge','The generated Pigeon code turns connect(profileId) into a typed message to Kotlin. A typo here would not compile.'],
+    ['Android asks permission','VpnBridge asks for notification permission, unlocks saved passwords if the app lock is on, and asks Android for VPN consent the first time. Then it starts the foreground service.'],
+    ['The service takes over','VpnTunnelService starts in the foreground (so Android won’t kill it), reads the credentials and launches the connection job. From here the UI could close and nothing would stop.'],
+    ['The orchestrator runs the sequence','Attempt 1 of 10 on the first address. It updates the status at each step: CONNECTING, AUTHENTICATING… Every step is one status.update { copy(...) }.'],
+    ['Adapters sign in','SslVpnGateway opens TLS with the pinned certificate, posts the password, sees “code needed”, and asks the OtpSession, which reads the email inbox and returns the code.'],
+    ['Tunnel and TUN','The gateway sends the tunnel settings; the link negotiates PPP and gets an IP. AndroidTun builds the virtual network card with that IP, DNS and routes.'],
+    ['Status flows back','The store holds CONNECTED with the IP, DNS and routes. The bridge pushes it to Flutter as onStatus. The same store updates the notification and the tile.'],
+    ['The screen reacts','The repository gets the new status, the view-model notifies, and the home screen glides into the connected layout. Packets now flow through pump().']
+  ];
+  const prog = document.getElementById('traceProg');
+  prog.innerHTML = steps.map(()=>'<i></i>').join('');
+  let ti = 0;
+  function showTrace(){
+    document.getElementById('traceCount').textContent = 'Step '+(ti+1)+' of '+steps.length;
+    document.getElementById('traceTitle').textContent = steps[ti][0];
+    document.getElementById('traceBody').textContent = steps[ti][1];
+    document.querySelectorAll('#lanes .node').forEach(n=>{ const s=+n.dataset.s; n.classList.toggle('on', s===ti); n.classList.toggle('done', s<ti); });
+    prog.querySelectorAll('i').forEach((e,i)=>e.classList.toggle('on', i<=ti));
+    document.getElementById('tPrev').disabled = ti===0;
+    document.getElementById('tNext').disabled = ti===steps.length-1;
+  }
+  document.getElementById('tPrev').onclick=()=>{ if(ti>0){ti--; showTrace();} };
+  document.getElementById('tNext').onclick=()=>{ if(ti<steps.length-1){ti++; showTrace();} };
+  showTrace();
+
+  // State machine
+  const phases = {
+    idle:['IDLE','Nothing running. The big button sits in the middle of the home screen.'],
+    connecting:['CONNECTING','Reaching an address. Each attempt picks the next address in the profile’s list (failover). A certificate problem skips just that address.'],
+    auth:['AUTHENTICATING','Sending the password or the single sign-on result. A rejected password is fatal: it stops at once instead of retrying into an account lockout.'],
+    otp:['WAITING_OTP','The gateway wants a code. The app reads the email inbox every 2 s and shows a countdown; you can also type the code.'],
+    push:['WAITING_PUSH','The gateway sent a FortiToken push. “Use a code instead” restarts this sign-in with a code, for this attempt only.'],
+    sso:['WAITING_SSO','Your company’s sign-in page is open in the browser. The app waits on 127.0.0.1:8020 for the result.'],
+    neg:['NEGOTIATING','Fetching tunnel settings, opening the tunnel and negotiating PPP until an IP address is assigned.'],
+    up:['CONNECTED','Packets flow. Traffic and latency refresh every second. If the link drops, it moves to RECONNECTING and rejoins with the same session cookie before signing in again.'],
+    error:['ERROR','A fatal error, or out of attempts. The error sheet shows the cause, one concrete fix, and technical details, with “Update password” first when the password was rejected.']
+  };
+  const smInfo = document.getElementById('smInfo');
+  function showPhase(k){
+    smInfo.innerHTML = '<h3 style="margin-bottom:6px;font-family:var(--mono);font-size:18px">'+phases[k][0]+'</h3><p>'+phases[k][1]+'</p>';
+    document.querySelectorAll('#smSvg .st').forEach(g=>g.classList.toggle('on', g.dataset.p===k));
+  }
+  document.querySelectorAll('#smSvg .st').forEach(g=>{ g.setAttribute('tabindex','0'); g.setAttribute('role','button'); g.addEventListener('click',()=>showPhase(g.dataset.p)); g.addEventListener('keydown',e=>{ if(e.key==='Enter'||e.key===' '){e.preventDefault(); showPhase(g.dataset.p);} }); });
+  showPhase('auth');
+
+  // Wire layers
+  // Each layer: what it is, why it is here, where it lives in Blanarch.
+  const wire = {
+    tcp:{t:'TCP · Transmission Control Protocol',
+      what:'The internet’s reliable pipe between two computers. The phone and the gateway first agree to talk (a short handshake), then exchange a stream of bytes until one side closes it. TCP splits the stream into numbered segments, the receiver confirms what arrived, anything lost is sent again, and everything is put back in order. It also slows down when the network is congested.',
+      why:'Everything above it (TLS, the sign-in, the tunnel, PPP) needs bytes to arrive complete and in order. TCP guarantees that. What it does not give: privacy or proof of who is on the other end, since anyone on the path can read raw TCP. That is the next layer’s job.',
+      where:'SocketFactory.tcp opens the connection to the gateway’s address and port. Before connecting, VpnService.protect() marks the socket so it leaves over the real Wi-Fi or mobile network; otherwise the VPN would route its own connection into itself and loop. A TCP read blocks until data arrives, which is the cancellation trap in section 08.',
+      bytes:['SYN','SYN-ACK','ACK','data ⇄']},
+    tls:{t:'TLS · Transport Layer Security',
+      what:'Encryption and identity on top of TCP. The two sides agree on keys, and the server proves who it is with its certificate. After that, everything is encrypted and tampering is detected.',
+      why:'The password, the code and your traffic cross networks we do not control. TLS keeps them private, and the certificate check proves we are talking to your company’s gateway and not an impostor.',
+      where:'PinningTrustManager (security/CertPinning.kt) compares the certificate’s SHA-256 with the fingerprint pinned for that server and refuses anything else. The negotiated version and cipher show up in Connection details.',
+      bytes:['ClientHello','ServerHello · certificate','keys agreed','encrypted records']},
+    login:{t:'HTTPS sign-in',
+      what:'Ordinary web requests (HTTP) sent inside TLS. The app posts the username and password to the gateway, and if the gateway asks for a second step, it posts the code or asks for a push.',
+      why:'This is how a FortiGate decides who you are before it opens a tunnel. The reply means one of: signed in (a session cookie), a code is needed, rejected, or this gateway’s HTML login page, which also means rejected.',
+      where:'login() in SslVpnGateway; the reply is classified by the pure core LoginProtocol.classifyStep1. The session cookie (SVPNCOOKIE, publicly named by Fortinet) proves the sign-in for the next steps.',
+      bytes:['POST','username · password','→ SVPNCOOKIE']},
+    xml:{t:'Tunnel settings',
+      what:'A small document the gateway returns once you are signed in: your internal IP, the DNS servers, the search domain and the routes that should go through the VPN.',
+      why:'The phone must know which traffic to send into the tunnel (split tunnel) or whether to send everything, and which DNS servers resolve company names.',
+      where:'fetchTunnelConfig() in SslVpnGateway, parsed by the pure core TunnelXml. The routes and DNS feed AndroidTun.',
+      bytes:['GET','cookie','→ IP · DNS · routes']},
+    tunnel:{t:'Tunnel request and frames',
+      what:'A fresh TLS connection asks the gateway to become a tunnel. From then on it no longer speaks HTTP: it carries frames, each a 6-byte header with lengths followed by one PPP packet.',
+      why:'The frame header tells each side where one packet ends and the next begins inside the continuous TLS byte stream.',
+      where:'openLink() in SslVpnGateway; frames are built and read by the pure core FrameCodec.',
+      bytes:['6-byte header','one PPP packet']},
+    ppp:{t:'PPP · LCP · IPCP',
+      what:'PPP, the Point-to-Point Protocol (RFC 1661), is an old public standard for running IP over one link between two endpoints (it began with dial-up modems). It does two jobs: it marks what kind of packet each one is, and it runs small setup protocols. LCP, the Link Control Protocol, runs first and sets up the link itself: both sides agree on options such as the MRU, the largest packet each accepts (we ask for 1354), and afterwards LCP Echo Request/Reply messages act as keepalives. IPCP, the IP Control Protocol (RFC 1332), runs once LCP is up and configures IP on the link: the gateway assigns our internal address and, with the RFC 1877 extension, the DNS servers.',
+      why:'It is not our choice: after the tunnel request, the FortiGate expects PPP inside the TLS stream. Fortinet does not publicly document why; the likely reason is that PPP already solved “bring up an IP link and hand the client an address” with well-known standards. The order is fixed: LCP (the link), then IPCP (the addressing), then your packets.',
+      where:'negotiate() in SslVpnLink drives the pure core PppNegotiator, which takes now as a parameter so its timers are testable. The keepalive echo is also what measures the latency on the connected screen.',
+      bytes:['LCP Configure','LCP Echo','IPCP Configure → IP, DNS']},
+    ip:{t:'Your packets',
+      what:'Now every app’s IP packets for the VPN routes come out of the TUN card, Android’s virtual network card for VPN apps.',
+      why:'This is the actual work of a VPN: carrying your apps’ traffic to the company network, encrypted.',
+      where:'pump() in SslVpnLink wraps each packet in PPP and a frame and sends it over TLS; replies are unwrapped and written back to the card. It also counts the traffic shown on the connected screen.',
+      bytes:['TUN → PPP → frame → TLS','TLS → frame → PPP → TUN']}
+  };
+  const wireInfo = document.getElementById('wireInfo');
+  function showWire(k){
+    const w = wire[k];
+    wireInfo.innerHTML = '<h3>'+w.t+'</h3>'
+      + '<dl class="wdl"><dt>What it is</dt><dd>'+w.what+'</dd><dt>Why we use it</dt><dd>'+w.why+'</dd><dt>In Blanarch</dt><dd>'+w.where+'</dd></dl>'
+      + '<div class="bytes">'+w.bytes.map(x=>'<span>'+x+'</span>').join('')+'</div>';
+    document.querySelectorAll('.wlayer').forEach(b=>b.setAttribute('aria-pressed', String(b.dataset.w===k)));
+  }
+  document.querySelectorAll('.wlayer').forEach(b=>b.addEventListener('click',()=>showWire(b.dataset.w)));
+  showWire('login');
+
+  // IKE sequence
+  const msgs = [
+    ['IKE_SA_INIT request','The phone proposes algorithms (SA), sends its Diffie-Hellman public value (KE) and a random nonce (Ni).','Maps to: login(), first half'],
+    ['IKE_SA_INIT response','The gateway picks algorithms and sends its own KE and nonce. Both sides now compute the same secret (SKEYSEED) and expand it with prf+ into separate keys. The keys themselves never cross the wire. NAT detection hashes tell both sides whether to move to UDP 4500.','RFC 7296 §2.13 to §2.14'],
+    ['IKE_AUTH starts, encrypted','From here everything is encrypted. The phone sends its identity and asks for configuration (CP). It leaves out AUTH, which tells the gateway: I will sign in with EAP.','RFC 7296 §2.16'],
+    ['The gateway proves itself','It sends its identity and proves it, normally with a certificate signature, and starts EAP. We check its certificate with the same pinning rules as today.','Maps to: certificate pinning'],
+    ['EAP: who you are','The phone answers the EAP identity request with the username.','EAP, RFC 3748'],
+    ['EAP: the challenge','The gateway asks for the password. With FortiToken, Fortinet documents that EAP-MSCHAPv2 carries the token prompt or push.','Fortinet KB: MSCHAPv2 required for token prompt/push'],
+    ['EAP: the answer','The phone answers. This is where our code, push and email-reading flow will plug in, exactly as it does for SSL-VPN today.','Maps to: SecondFactorProvider'],
+    ['EAP success','The user is signed in. Both sides now share key material from EAP.',''],
+    ['AUTH from the phone','The phone signs the conversation with the EAP key, binding the sign-in to this IKE session.',''],
+    ['Configuration and the tunnel','The gateway sends CP (your IP, DNS, advertised routes), the Child SA’s algorithms, and traffic selectors (TSr), the binding rule for which traffic enters the tunnel.','Maps to: fetchTunnelConfig() + openLink()'],
+    ['ESP flows','Packets now travel encrypted with the Child SA keys. Empty INFORMATIONAL messages check liveness, and CREATE_CHILD_SA rekeys before keys expire, which SSL-VPN never needed.','Maps to: pump()']
+  ];
+  let si = 0;
+  function showSeq(){
+    document.getElementById('seqCount').textContent = 'Message '+(si+1)+' of '+msgs.length;
+    document.getElementById('seqTitle').textContent = msgs[si][0];
+    document.getElementById('seqBody').textContent = msgs[si][1];
+    document.getElementById('seqMap').textContent = msgs[si][2];
+    document.querySelectorAll('#seqSvg .msg').forEach(g=>{ const m=+g.dataset.m; g.classList.toggle('on', m===si); g.style.opacity = m<=si ? 1 : .28; });
+    document.getElementById('sPrev').disabled = si===0;
+    document.getElementById('sNext').disabled = si===msgs.length-1;
+  }
+  document.getElementById('sPrev').onclick=()=>{ if(si>0){si--; showSeq();} };
+  document.getElementById('sNext').onclick=()=>{ if(si<msgs.length-1){si++; showSeq();} };
+  document.querySelectorAll('#seqSvg .msg').forEach(g=>g.addEventListener('click',()=>{ si=+g.dataset.m; showSeq(); }));
+  showSeq();
+
+  // ESP fields
+  const esp = {
+    spi:'Security Parameters Index. Tells the receiver which Security Association (which keys) this packet belongs to. Sent in the clear.',
+    seq:'A counter that goes up by one per packet. The receiver keeps a sliding anti-replay window and drops anything already seen or too old, so a recorded packet can’t be replayed.',
+    iv:'Initialization vector for the cipher. With AES-GCM it must never repeat for the same key.',
+    payload:'Your original IP packet, encrypted. Nobody on the path can read it.',
+    pad:'Padding and its length, plus “next header”, which says what’s inside (IPv4 here). Encrypted together with the payload.',
+    icv:'Integrity Check Value. With AES-GCM this is the authentication tag: if one bit changed on the way, the packet is rejected.'
+  };
+  const espInfo = document.getElementById('espInfo');
+  function showEsp(k){ espInfo.textContent = esp[k]; document.querySelectorAll('.esp-row button').forEach(b=>b.setAttribute('aria-pressed', String(b.dataset.e===k))); }
+  document.querySelectorAll('.esp-row button').forEach(b=>b.addEventListener('click',()=>showEsp(b.dataset.e)));
+  showEsp('spi');
+
+  // checklist
+  document.querySelectorAll('#check input').forEach(cb=>{
+    try{ cb.checked = localStorage.getItem('ib-'+cb.id)==='1'; }catch(e){}
+    cb.addEventListener('change',()=>{ try{ localStorage.setItem('ib-'+cb.id, cb.checked?'1':'0'); }catch(e){} });
+  });
+
+  // toc highlight
+  const links = [...document.querySelectorAll('.toc a')];
+  if('IntersectionObserver' in window){
+    const io = new IntersectionObserver(es=>{ es.forEach(e=>{ if(e.isIntersecting){ links.forEach(a=>a.classList.toggle('on', a.getAttribute('href')==='#'+e.target.id)); } }); }, {rootMargin:'-30% 0px -60% 0px'});
+    document.querySelectorAll('main section').forEach(s=>io.observe(s));
+  }
+})();
+</script>

@@ -1,0 +1,24 @@
+{
+  "otp": {
+    "regex": "(?i)(?:auth ?code|token(?: code)?|code|c[oó]digo)\\D{0,20}(\\d{4,8})",
+    "timeoutSeconds": 90,
+    "manualTimeoutSeconds": 300,
+    "pollSeconds": 2
+  },
+  "retry": {
+    "maxAttempts": 10,
+    "attemptTimeoutSeconds": 30,
+    "connectTimeoutSeconds": 10,
+    "delayBetweenSeconds": 3,
+    "maxCookieReuses": 2
+  },
+  "sso": {
+    "listenPort": 8020,
+    "timeoutSeconds": 180
+  },
+  "mru": 1354,
+  "fallbackDns": [
+    "1.1.1.1",
+    "9.9.9.9"
+  ]
+}

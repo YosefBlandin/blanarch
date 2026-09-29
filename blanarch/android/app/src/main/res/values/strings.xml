@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name" translatable="false">Blanarch</string>
+    <string name="notif_channel">VPN status</string>
+    <string name="notif_connecting">Connecting to %1$s…</string>
+    <string name="notif_reconnecting">Reconnecting to %1$s…</string>
+    <string name="notif_connected">Connected to %1$s · %2$s</string>
+    <string name="notif_enter_code">Type your sign-in code here or in the app</string>
+    <string name="notif_approve_push">Approve the sign-in on your phone</string>
+    <string name="notif_finish_sso">Finish signing in in the browser</string>
+    <string name="notif_disconnect">Disconnect</string>
+    <string name="notif_reconnect">Reconnect</string>
+    <string name="tile_label">Blanarch</string>
+    <string name="tile_no_connection">No connection yet</string>
+    <string name="tile_connected">Connected</string>
+    <string name="tile_connecting">Connecting…</string>
+    <string name="tile_off">Off</string>
+    <string name="unlock_title">Unlock Blanarch</string>
+    <string name="unlock_subtitle">Confirm it\'s you to use your saved password</string>
+    <string name="notif_alert_channel">Connection alerts</string>
+    <string name="notif_dropped">VPN dropped · reconnecting to %1$s…</string>
+    <string name="notif_reconnected">Reconnected to %1$s</string>
+    <string name="notif_gave_up">VPN to %1$s disconnected · tap to reconnect</string>
+    <string name="notif_waiting_network">Waiting for Wi-Fi or mobile data</string>
+    <string name="notif_enter_code_action">Enter code</string>
+    <string name="notif_code_hint">Code</string>
+    <string name="notif_open_sign_in">Open sign-in page</string>
+</resources>

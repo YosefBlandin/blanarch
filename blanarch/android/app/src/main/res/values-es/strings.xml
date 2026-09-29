@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="notif_channel">Estado de la VPN</string>
+    <string name="notif_connecting">Conectando a %1$s…</string>
+    <string name="notif_reconnecting">Reconectando a %1$s…</string>
+    <string name="notif_connected">Conectado a %1$s · %2$s</string>
+    <string name="notif_enter_code">Escribe tu código de acceso aquí o en la app</string>
+    <string name="notif_approve_push">Aprueba el inicio de sesión en tu teléfono</string>
+    <string name="notif_finish_sso">Termina de iniciar sesión en el navegador</string>
+    <string name="notif_disconnect">Desconectar</string>
+    <string name="notif_reconnect">Reconectar</string>
+    <string name="tile_label">Blanarch</string>
+    <string name="tile_no_connection">Aún no hay conexión</string>
+    <string name="tile_connected">Conectado</string>
+    <string name="tile_connecting">Conectando…</string>
+    <string name="tile_off">Desactivado</string>
+    <string name="unlock_title">Desbloquear Blanarch</string>
+    <string name="unlock_subtitle">Confirma que eres tú para usar tu contraseña guardada</string>
+    <string name="notif_alert_channel">Alertas de conexión</string>
+    <string name="notif_dropped">Se cayó la VPN · reconectando a %1$s…</string>
+    <string name="notif_reconnected">Reconectado a %1$s</string>
+    <string name="notif_gave_up">VPN a %1$s desconectada · toca para reconectar</string>
+    <string name="notif_waiting_network">Esperando Wi-Fi o datos móviles</string>
+    <string name="notif_enter_code_action">Escribir código</string>
+    <string name="notif_code_hint">Código</string>
+    <string name="notif_open_sign_in">Abrir página de inicio de sesión</string>
+</resources>

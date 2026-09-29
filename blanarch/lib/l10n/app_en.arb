@@ -1,0 +1,500 @@
+{
+  "@@locale": "en",
+  "splashTagline": "PRIVATE ACCESS  ·  ANYWHERE",
+  "phaseIdle": "Not connected",
+  "phaseConnecting": "Connecting",
+  "phaseConnected": "Connected",
+  "phaseReconnecting": "Reconnecting",
+  "phaseDisconnecting": "Disconnecting",
+  "phaseError": "Couldn’t connect",
+  "tapToConnect": "Tap to connect",
+  "stepGateway": "Reaching the server",
+  "stepSigningIn": "Signing in",
+  "stepWaitingCode": "Waiting for the code",
+  "stepApproval": "Waiting for your approval",
+  "stepSso": "Signing in with your company",
+  "stepVerifying": "Verifying code {code}",
+  "@stepVerifying": {
+    "placeholders": {
+      "code": {
+        "type": "String"
+      }
+    }
+  },
+  "stepTunnel": "Opening the tunnel",
+  "tunnelIp": "IP {ip}",
+  "@tunnelIp": {
+    "placeholders": {
+      "ip": {
+        "type": "String"
+      }
+    }
+  },
+  "actionConnect": "Connect",
+  "actionDisconnect": "Disconnect",
+  "actionCancelConnecting": "Cancel connecting",
+  "settingsTooltip": "Settings",
+  "addConnection": "Add connection",
+  "vpnPermissionNeeded": "Allow the VPN permission to connect",
+  "checkingInbox": "Checking your inbox…",
+  "enterCodeTitle": "Enter your code",
+  "typeCode": "Type the code",
+  "fix": "Fix",
+  "codeHint": "Code",
+  "codeExpiresHint": "Enter the newest code quickly. It expires in about a minute.",
+  "waitingPushTitle": "Approve on your phone",
+  "waitingPushBody": "Open your authenticator app, like FortiToken, and approve the sign-in.",
+  "useCodeInstead": "Use a code instead",
+  "waitingSsoTitle": "Finish signing in",
+  "waitingSsoBody": "Your company’s sign-in page is open in the browser. Come back here when you’re done.",
+  "openSignInPage": "Open sign-in page",
+  "noProfilesTitle": "Add your company VPN",
+  "noProfilesBody": "You’ll need the address your IT team uses, like vpn.company.com.",
+  "details": "Details",
+  "tryAgain": "Try again",
+  "editConnection": "Edit connection",
+  "reviewCertificate": "Review certificate",
+  "whatYouCanDo": "What you can do",
+  "technicalDetails": "Technical details",
+  "copy": "Copy",
+  "copied": "Copied",
+  "errorNoVpnPassword": "Add your VPN password first",
+  "errorAuthRejected": "The server rejected your username or password",
+  "errorUnsupportedChallenge": "The server asked for a sign-in method this app doesn’t support yet",
+  "errorCertMismatch": "The server’s certificate changed, so the connection was blocked",
+  "errorCertUntrusted": "The server’s certificate isn’t trusted yet",
+  "errorSsoTimeout": "Signing in in the browser took too long",
+  "errorSsoFailed": "Single sign-on couldn’t start",
+  "errorNoProfile": "Add a connection first",
+  "errorInvalidAddress": "That doesn’t look like a server address",
+  "errorPermissionRevoked": "The Android VPN permission was turned off",
+  "errorOutOfAttempts": "Tried {count} times without success",
+  "@errorOutOfAttempts": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "errorOtpTimeout": "The code didn’t arrive in time",
+  "errorOtpRejected": "The code was wrong or had expired",
+  "errorGatewayUnreachable": "The server isn’t responding",
+  "errorTunnelRefused": "The server doesn’t allow tunnel mode for your account",
+  "errorProtocol": "The server sent an unexpected reply",
+  "errorLinkLost": "The connection dropped",
+  "errorEmailAuthFailed": "Email password was rejected",
+  "errorEmailUnreachable": "Can’t reach your mailbox",
+  "errorEmailNotConfigured": "No email password saved",
+  "fixAuthRejected": "If your password changed recently, update it here. Trying the old one again can lock your account.",
+  "fixGatewayUnreachable": "Check the address and your internet connection. If you’re on a guest Wi-Fi, try mobile data.",
+  "fixCertUntrusted": "Your phone hasn’t seen this address before. Trust it if it belongs to your company VPN. The app will warn you if its certificate ever changes.",
+  "fixCertMismatch": "Don’t trust the new certificate unless your IT team confirms the server changed.",
+  "fixOtp": "Try again and enter the newest code right away. Codes usually expire after a minute.",
+  "fixTunnelRefused": "Ask your IT team to enable tunnel mode (FortiClient access) for your account.",
+  "fixGeneric": "Try again. If it keeps failing, share the activity log with your IT team.",
+  "back": "Back",
+  "cancel": "Cancel",
+  "continueAction": "Continue",
+  "done": "Done",
+  "save": "Save",
+  "change": "Change",
+  "remove": "Remove",
+  "delete": "Delete",
+  "off": "Off",
+  "optional": "Optional",
+  "advanced": "Advanced",
+  "showPassword": "Show password",
+  "hidePassword": "Hide password",
+  "welcomeTitle": "Private access,\nin one tap.",
+  "welcomeBody": "Connect to your company’s FortiGate VPN with clear errors, codes read for you, and no repeated passwords.",
+  "featureSignInTitle": "Signs in for you",
+  "featureSignInBody": "Your password is saved once, encrypted on this phone.",
+  "featureCodeTitle": "Handles the second step",
+  "featureCodeBody": "Push approval, codes, or reading the code from your email.",
+  "featureRetryTitle": "Keeps you connected",
+  "featureRetryBody": "Retries and switches servers until it connects.",
+  "setUp": "Set up",
+  "addressTitle": "Your company VPN",
+  "addressBody": "Enter the address your IT team gave you. It usually looks like vpn.company.com, sometimes with a port.",
+  "addressLabel": "VPN address",
+  "checkingServer": "Checking the server…",
+  "certTitle": "A new server",
+  "certBody": "This is the first time your phone sees {host}. Company VPNs often use their own certificate, so this is normal. Continue if this is the address your IT team gave you. The app will warn you if it ever changes.",
+  "@certBody": {
+    "placeholders": {
+      "host": {
+        "type": "String"
+      }
+    }
+  },
+  "certChangedTitle": "This server changed",
+  "certChangedBody": "The certificate for {host} is different from the one you trusted. Someone could be intercepting the connection. Ask your IT team before you trust it.",
+  "@certChangedBody": {
+    "placeholders": {
+      "host": {
+        "type": "String"
+      }
+    }
+  },
+  "certFingerprint": "Fingerprint (SHA-256)",
+  "certDontConnect": "Don’t connect",
+  "certTrust": "Trust this server",
+  "signInTitle": "How do you sign in?",
+  "signInBody": "Use the same account as on your computer.",
+  "methodPassword": "Username and password",
+  "methodSso": "Company account (single sign-on)",
+  "ssoExplain": "Each time you connect, your company’s sign-in page opens in the browser.",
+  "usernameLabel": "Username",
+  "passwordLabel": "Password",
+  "nameLabel": "Name for this connection",
+  "realmLabel": "Realm",
+  "backupAddressesLabel": "Backup addresses, one per line",
+  "emailStepTitle": "Let it read the code",
+  "emailStepBody": "If your company emails you the sign-in code, the app can find it in your inbox and finish for you. Nothing to copy.",
+  "emailAddressLabel": "Email address",
+  "emailPasswordLabel": "Email password",
+  "imapServerLabel": "Mail server (IMAP)",
+  "senderLabel": "Only codes from this sender",
+  "verifyAndContinue": "Verify & continue",
+  "skipEmailCodes": "Skip, I’ll type codes myself",
+  "permissionsTitle": "Before you connect",
+  "permissionsBody": "Android asks once for each permission. You can change them later in system settings.",
+  "permissionVpnTitle": "VPN connection",
+  "permissionVpnBody": "Lets the app create the secure tunnel on this phone.",
+  "permissionNotificationsTitle": "Notifications",
+  "permissionNotificationsBody": "Shows the connection status with a quick Disconnect button.",
+  "disclosureTitle": "What the app accesses",
+  "disclosureBody": "The app connects only to the VPN servers and mailbox you add. Passwords stay encrypted on this phone and are never shared. If you turn on email codes, it reads new messages in that mailbox only to find the sign-in code.",
+  "settingsTitle": "Settings",
+  "appearance": "Appearance",
+  "themeAuto": "Auto",
+  "themeLight": "Light",
+  "themeDark": "Dark",
+  "themeAutoHint": "Auto follows your phone’s setting.",
+  "connections": "Connections",
+  "diagnostics": "Diagnostics",
+  "activityLog": "Activity log",
+  "versionLine": "Version {version}",
+  "@versionLine": {
+    "placeholders": {
+      "version": {
+        "type": "String"
+      }
+    }
+  },
+  "saved": "Saved",
+  "notSet": "Not set",
+  "secondFactorLabel": "Second step",
+  "secondFactorAuto": "Push when available",
+  "secondFactorCode": "Always a code",
+  "emailCodesLabel": "Read codes from email",
+  "deleteConnection": "Delete connection",
+  "deleteConfirm": "Delete {name}? Its saved passwords are removed too.",
+  "@deleteConfirm": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "activityTitle": "Activity",
+  "nothingYet": "Nothing yet",
+  "scanQr": "Scan QR code",
+  "scanQrHint": "Point the camera at the setup code from your IT team or a colleague.",
+  "notASetupCode": "That QR code isn’t a connection setup code",
+  "linkMismatchTitle": "Fingerprint doesn’t match",
+  "linkMismatchBody": "The certificate of {host} is different from the one in the setup code you used. Don’t connect unless your IT team confirms the server changed.",
+  "shareSetup": "Share setup",
+  "shareSetupBody": "Colleagues can scan this to add the same connection. Passwords are never included.",
+  "includeUsername": "Include my username",
+  "copyLink": "Copy link",
+  "security": "Security",
+  "appLock": "App lock",
+  "appLockHint": "Confirm it’s you with fingerprint or face before saved passwords are used.",
+  "appLockUnavailable": "Set a screen lock on your phone to use this.",
+  "alwaysOn": "Always-on VPN",
+  "alwaysOnHint": "Keep the VPN on and block connections without it. Opens Android’s VPN settings.",
+  "errorLocked": "Unlock the app to use your saved password",
+  "fixLocked": "Open the app and connect from there, or turn off the app lock in Settings.",
+  "@linkMismatchBody": {
+    "placeholders": {
+      "host": {
+        "type": "String"
+      }
+    }
+  },
+  "enterCodeBody": "Type the code from your email, text message or authenticator app.",
+  "submitCode": "Send code",
+  "timeLeft": "{seconds} s left",
+  "@timeLeft": {
+    "placeholders": {
+      "seconds": {
+        "type": "int"
+      }
+    }
+  },
+  "updatePassword": "Update password",
+  "fixOutOfAttempts": "None of the server addresses answered. If other apps work, the VPN may be down, so ask your IT team.",
+  "fixUnsupportedChallenge": "Share the activity log with your IT team so they can see which sign-in method your account needs.",
+  "showFingerprint": "Show fingerprint",
+  "hideFingerprint": "Hide fingerprint",
+  "certTrustContinue": "Trust and continue",
+  "realmHint": "Only if your IT team gave you one",
+  "agreeAndConnect": "Agree & connect",
+  "stepOf": "Step {step} of {total}",
+  "@stepOf": {
+    "placeholders": {
+      "step": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "connectTo": "Connect to {name}",
+  "@connectTo": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "shareLog": "Share",
+  "quickTile": "Quick Settings tile",
+  "quickTileHint": "Connect from the panel you swipe down from the top of the screen.",
+  "switchWhileConnected": "Disconnect to switch connections",
+  "logOk": "Success",
+  "logError": "Error",
+  "logInfo": "Info",
+  "shortcuts": "Shortcuts",
+  "shareLogSubject": "Blanarch activity log",
+  "stepChipServer": "Server",
+  "stepChipSignIn": "Sign in",
+  "stepChipTunnel": "Tunnel",
+  "reachingHost": "Reaching {host}",
+  "@reachingHost": {
+    "placeholders": {
+      "host": {
+        "type": "String"
+      }
+    }
+  },
+  "attemptOf": "Attempt {attempt} of {total} · {host}",
+  "@attemptOf": {
+    "placeholders": {
+      "attempt": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      },
+      "host": {
+        "type": "String"
+      }
+    }
+  },
+  "lastTry": "Last try: {reason}",
+  "@lastTry": {
+    "placeholders": {
+      "reason": {
+        "type": "String"
+      }
+    }
+  },
+  "tryingFor": "Trying for {time}",
+  "@tryingFor": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "progressOf": "Step {step} of {total}, {name}",
+  "@progressOf": {
+    "placeholders": {
+      "step": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      },
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "activity": "Activity",
+  "seeAll": "See all",
+  "eventStarting": "Starting {name}",
+  "@eventStarting": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "eventAttempt": "Attempt {attempt} of {total} · {address}",
+  "@eventAttempt": {
+    "placeholders": {
+      "attempt": {
+        "type": "String"
+      },
+      "total": {
+        "type": "String"
+      },
+      "address": {
+        "type": "String"
+      }
+    }
+  },
+  "eventSigningIn": "Signing in as {user}",
+  "@eventSigningIn": {
+    "placeholders": {
+      "user": {
+        "type": "String"
+      }
+    }
+  },
+  "eventSignedIn": "Signed in",
+  "eventWaitingSso": "Waiting for sign-in in the browser",
+  "eventApprovePush": "Waiting for approval on your phone",
+  "eventCodeReceived": "Got code {code}. Checking it",
+  "@eventCodeReceived": {
+    "placeholders": {
+      "code": {
+        "type": "String"
+      }
+    }
+  },
+  "eventConnected": "Connected · IP {ip}",
+  "@eventConnected": {
+    "placeholders": {
+      "ip": {
+        "type": "String"
+      }
+    }
+  },
+  "eventConnectionLost": "The connection dropped",
+  "eventReconnecting": "Reconnecting",
+  "eventDisconnected": "Disconnected",
+  "checkingHost": "Checking {host}…",
+  "@checkingHost": {
+    "placeholders": {
+      "host": {
+        "type": "String"
+      }
+    }
+  },
+  "factTunnelIp": "Tunnel IP",
+  "factGateway": "Gateway",
+  "factRouting": "Routing",
+  "factDns": "DNS",
+  "factTraffic": "Traffic",
+  "factSignedIn": "Signed in",
+  "routingAll": "All traffic",
+  "routingSplit": "Split tunnel · {count} routes",
+  "@routingSplit": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "backupAddress": "backup address",
+  "signInPassword": "password",
+  "signInCode": "code",
+  "signInPush": "push approval",
+  "signInSso": "single sign-on",
+  "certPinnedMatches": "Certificate pinned · matches",
+  "certSystemTrusted": "Certificate trusted by the system",
+  "allDetails": "All details",
+  "detailsTitle": "Connection details",
+  "sectionNetwork": "Network",
+  "sectionServer": "Server",
+  "sectionSession": "Session",
+  "dnsServers": "DNS servers",
+  "searchDomain": "Search domain",
+  "routesLabel": "Routes",
+  "mtuLabel": "MTU",
+  "certificateLabel": "Certificate",
+  "pinned": "pinned",
+  "encryptionLabel": "Encryption",
+  "latencyLabel": "Latency",
+  "userLabel": "User",
+  "signInLabel": "Sign-in",
+  "connectedSinceLabel": "Connected since",
+  "reconnectsLabel": "Reconnects",
+  "addressesTried": "Addresses tried",
+  "copyAll": "Copy all",
+  "shareWithIt": "Share with IT",
+  "detailsShareSubject": "Blanarch connection details",
+  "measuring": "measuring",
+  "notReported": "Not reported",
+  "millis": "{ms} ms",
+  "@millis": {
+    "placeholders": {
+      "ms": {
+        "type": "int"
+      }
+    }
+  },
+  "copyValue": "Copy {label}",
+  "@copyValue": {
+    "placeholders": {
+      "label": {
+        "type": "String"
+      }
+    }
+  },
+  "backupShort": "backup",
+  "phaseWaitingNetwork": "Waiting for a network",
+  "stepWaitingNetwork": "Waiting for Wi-Fi or mobile data",
+  "errorNetworkChanged": "The network changed",
+  "errorNoNetwork": "No internet connection",
+  "errorSessionExpired": "The session expired",
+  "fixNoNetwork": "Turn on Wi-Fi or mobile data. The app reconnects by itself when the network is back.",
+  "eventNetworkLost": "No network · waiting",
+  "eventNetworkBack": "Network back",
+  "eventNetworkChanged": "Network changed · rejoining",
+  "eventSessionExpired": "Session expired · signing in again",
+  "eventDnsFallback": "The server gave no DNS. Using {servers} through the tunnel",
+  "@eventDnsFallback": {
+    "placeholders": {
+      "servers": {"type": "String"}
+    }
+  },
+  "reconnectedAfter": "Reconnected · {reason}",
+  "@reconnectedAfter": {
+    "placeholders": {
+      "reason": {
+        "type": "String"
+      }
+    }
+  },
+  "errorSslVpnOff": "This server doesn’t offer SSL-VPN",
+  "errorClientCertRequired": "This server asks for a client certificate",
+  "fixSslVpnOff": "It may have moved to IPsec, which Blanarch will support soon. Ask your IT team whether SSL-VPN is still available and at which address.",
+  "fixClientCert": "Blanarch doesn’t use client certificates yet. Some servers ask for one without requiring it, so you can still try.",
+  "ipsecAnswers": "The server answers IPsec (IKEv2), so it probably uses IPsec now.",
+  "unsupportedTitle": "This server may not work yet",
+  "tellIt": "What to ask IT",
+  "tellItSslOff": "Is SSL-VPN tunnel mode still enabled on {host}? If our FortiGate moved to IPsec, what are the IPsec settings?",
+  "@tellItSslOff": {
+    "placeholders": {
+      "host": {
+        "type": "String"
+      }
+    }
+  },
+  "tellItClientCert": "Does {host} require a client certificate for the VPN, or is it optional?",
+  "@tellItClientCert": {
+    "placeholders": {
+      "host": {
+        "type": "String"
+      }
+    }
+  },
+  "tryAnotherAddress": "Try another address",
+  "continueAnyway": "Continue anyway"
+}

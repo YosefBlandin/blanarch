@@ -1,0 +1,56 @@
+# Repository-wide ignores. The Flutter app keeps its own template in
+# blanarch/.gitignore and blanarch/android/.gitignore.
+
+# ── Private: the Mac script, its config, business notes, local notes ─
+private/
+CLAUDE.local.md
+
+# ── Secrets and signing (never commit) ─────────────────────────────
+*.jks
+*.keystore
+*.p12
+*.pem
+key.properties
+.env
+.env.*
+!.env.example
+
+# ── macOS ───────────────────────────────────────────────────────────
+.DS_Store
+.AppleDouble
+.LSOverride
+._*
+.Spotlight-V100
+.Trashes
+
+# ── Python ─────────────────────────────────────────────────────────
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.pytest_cache/
+.mypy_cache/
+
+# ── Android / Gradle ────────────────────────────────────────────────
+local.properties
+.gradle/
+.kotlin/
+.cxx/
+captures/
+*.apk
+*.aab
+*.ap_
+blanarch/android/build/
+
+# ── Editors and IDEs ────────────────────────────────────────────────
+.idea/
+*.iml
+*.iws
+*.swp
+*~
+.vscode/*
+!.vscode/extensions.json
+
+# ── Logs and local tool state ───────────────────────────────────────
+*.log
+.impeccable/
