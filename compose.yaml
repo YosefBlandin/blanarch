@@ -1,0 +1,23 @@
+# Local Postgres for the team server. Settings come from the git-ignored .env (copy .env.example).
+# Postgres keeps the password from the volume's first start: after changing it, run `docker compose down -v`.
+name: blanarch
+services:
+  postgres:
+    image: postgres:17.11
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-blanarch}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD in .env, see .env.example}
+      POSTGRES_DB: ${POSTGRES_DB:-blanarch}
+    ports:
+      - 127.0.0.1:${POSTGRES_PORT:-5432}:5432
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U "$${POSTGRES_USER}" -d "$${POSTGRES_DB}"']
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+volumes:
+  pgdata:
