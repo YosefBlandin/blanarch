@@ -1,0 +1,13 @@
+# Prettier covers only the TypeScript workspace and its root tooling. The Flutter app, docs and notes keep
+# their own style.
+/*
+!/.github/
+!/packages/
+!/scripts/
+!/server/
+!/.prettierrc.json
+!/compose.yaml
+!/eslint.config.js
+!/package.json
+!/tsconfig.base.json
+!/vitest.config.ts

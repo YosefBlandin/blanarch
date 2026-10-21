@@ -54,3 +54,12 @@ blanarch/android/build/
 # ── Logs and local tool state ───────────────────────────────────────
 *.log
 .impeccable/
+
+# ── Node workspace (server, packages) ───────────────────────────────
+node_modules/
+dist/
+coverage/
+*.tsbuildinfo
+
+# ── Agent worktrees ─────────────────────────────────────────────────
+.claude/worktrees/
