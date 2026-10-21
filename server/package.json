@@ -4,6 +4,8 @@
   "private": true,
   "type": "module",
   "scripts": {
+    "start": "node src/server.ts",
+    "dev": "node --watch --env-file-if-exists=.env src/server.ts",
     "migrate": "node --env-file-if-exists=.env \"$(command -v node-pg-migrate)\" up",
     "migrate:create": "node-pg-migrate create --migration-file-language sql",
     "db:types": "kysely-codegen --env-file .env --dialect postgres --exclude-pattern pgmigrations --out-file src/db/types.ts && sed -i.bak \"s/^export interface DB /export interface Database /\" src/db/types.ts && rm src/db/types.ts.bak && grep -q \"^export interface Database \" src/db/types.ts && prettier --write src/db/types.ts",
