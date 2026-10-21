@@ -85,7 +85,7 @@
     {
       "id": "APP-5",
       "status": "done",
-      "commit": "fac13a7",
+      "commit": "fac13a7, 87a2129",
       "evidence": [
         "HUMAN need (Docker running) already met: docker info Server Version 29.5.2, context colima",
         "RK-6: without variables Testcontainers fails: Could not find a working container runtime strategy; with only DOCKER_HOST it fails creating the Ryuk mount (mkdir .../docker.sock: operation not supported); works with DOCKER_HOST=unix://$HOME/.colima/default/docker.sock and TESTCONTAINERS_DOCKER_SOCKET_OVERRIDE=/var/run/docker.sock (for APP-10 Gotchas)",
@@ -95,7 +95,8 @@
         "compose: docker-compose config -q valid; with POSTGRES_PASSWORD unset -> required variable POSTGRES_PASSWORD is missing a value; up -d --wait -> healthy, port 127.0.0.1:5433->5432",
         "T-MAN-1: row inserted; after docker-compose stop + up: kept; after docker-compose down + up: kept; test table dropped",
         "also: npm run lint exit 0; npm run typecheck exit 0; prettier check clean",
-        "created ignored .env and server/.env from the examples with port 5433 (owner Mac already has a Postgres on 127.0.0.1:5432)"
+        "created ignored .env and server/.env from the examples with port 5433 (owner Mac already has a Postgres on 127.0.0.1:5432)",
+        "follow-up 87a2129 (conformance minor 3): T-DB-2 terminates only its own pool backend by pid (parallel test files share the container and application name); npx vitest run x3 -> Tests 17 passed (17) each"
       ],
       "review": ""
     },
@@ -117,25 +118,27 @@
     {
       "id": "APP-7",
       "status": "done",
-      "commit": "797fa43",
+      "commit": "797fa43, d989051",
       "evidence": [
         "fail-first: npx vitest run server/src/health.test.ts -> Error: Cannot find module ./app.ts (Test Files 1 failed)",
         "verify: (Colima vars) npx vitest run server/src/health.test.ts --reporter=verbose -> 4 passed: T-HLT-1 76ms, T-HLT-2 1005ms (503 under the 1500 ms bound), T-HLT-3 36ms, T-HLT-4 8ms",
         "fix round 1: lint require-await on the async plugin wrapper -> callback-style plugin (FastifyPluginCallbackZod); dropped a type import from transitive pino",
-        "lint exit 0, typecheck exit 0, prettier clean"
+        "lint exit 0, typecheck exit 0, prettier clean",
+        "follow-up d989051 (conformance minor 3): T-HLT-3 terminates only its own pool backend by pid; lint 0, typecheck 0, vitest 17/17 three runs"
       ],
       "review": ""
     },
     {
       "id": "APP-8",
       "status": "done",
-      "commit": "c297f8a",
+      "commit": "c297f8a, da528c8",
       "evidence": [
         "fail-first: npx vitest run server/src/server.test.ts -> 2 failed (Cannot find module server/src/server.ts)",
         "verify: (Colima vars) npx vitest run server/src/server.test.ts -> Test Files 1 passed (1), Tests 2 passed (2) [T-SRV-1 217ms, T-SRV-2 325ms]",
         "RK-2: plain node (24.21.0) loads server.ts and @blanarch/contract (symlinked workspace, realpath outside node_modules) through native type stripping; tsx not needed",
         "fix round 1: lint no-unused-vars (test env copy) and prefer-const (let app) -> restructured; lint 0, typecheck 0, prettier clean, tests 2 passed",
-        "smoke: npm -w server run dev against compose -> curl /healthz = {\"status\":\"ok\",\"db\":\"up\"} 200; SIGTERM logged shutting down"
+        "smoke: npm -w server run dev against compose -> curl /healthz = {\"status\":\"ok\",\"db\":\"up\"} 200; SIGTERM logged shutting down",
+        "follow-up da528c8 (conformance minor 2): server/package.json engines.node >=24.2, since import.meta.main exists from Node 24.2"
       ],
       "review": ""
     },
@@ -166,11 +169,12 @@
     {
       "id": "APP-11",
       "status": "in_progress",
-      "commit": "",
+      "commit": "e53e837",
       "evidence": [
         "spec-lint /Users/v/projects/forti-vpn/docs/specs/server-foundations -> 0 errors, 0 warnings",
         "profile: already carried verify.app with the npm checks, node/docker preflight, test.app.ts/hooks and the corrected remote note; added a Notes pointer to the Colima Testcontainers variables",
-        "T-APP-1 full verify.app (Colima vars set): flutter analyze -> No issues found!; flutter test -> +56 All tests passed!; gradlew ktlintCheck testDebugUnitTest -> BUILD SUCCESSFUL, 120 tests 0 failures 0 errors 0 skipped; npm ci && format:check && lint && typecheck && npm test -> exit 0 (vitest Test Files 6 passed, Tests 17 passed; node --test hooks 15 pass 0 fail). App results equal the APP-0 baseline"
+        "T-APP-1 full verify.app (Colima vars set): flutter analyze -> No issues found!; flutter test -> +56 All tests passed!; gradlew ktlintCheck testDebugUnitTest -> BUILD SUCCESSFUL, 120 tests 0 failures 0 errors 0 skipped; npm ci && format:check && lint && typecheck && npm test -> exit 0 (vitest Test Files 6 passed, Tests 17 passed; node --test hooks 15 pass 0 fail). App results equal the APP-0 baseline",
+        "D-25 scan (patterns: 12 list entries + adb serial + backup folder path from CLAUDE.local.md = 14 lines, never printed): git diff origin/qa...HEAD 0 hits; git log --format=%B origin/qa..HEAD 0 hits; drafted PR title and body 0 hits; changed file names 0 hits"
       ],
       "review": ""
     }
@@ -201,5 +205,14 @@
     "tests": "flutter test 56 passed; Gradle 120 tests 0 failures; vitest 17 passed (6 files); hooks node --test 15 passed",
     "lint": "flutter analyze no issues; ktlintCheck OK; eslint exit 0; prettier --check clean",
     "typecheck": "tsc --noEmit in contract and server: exit 0"
+  },
+  "conformance": {
+    "reviewer": "spec-reviewer subagent, fresh context, same model (claude-opus-5-5)",
+    "result": "blocker 0, major 0, minor 3",
+    "findings": [
+      "minor 1 (AC-10, D-22): hook case folding is ASCII-only since 23c2e53. Checked: 0 of the private list entries contain non-ASCII bytes (count only), so nothing is lost today. Owner to accept or ask for a locale-aware second pass",
+      "minor 2 (AC-4, D-14): import.meta.main needs Node 24.2 while engines allowed >=24 -> fixed da528c8",
+      "minor 3 (AC-7, AC-9): termination tests killed every blanarch-server backend across parallel test files -> fixed 87a2129, d989051"
+    ]
   }
 }
