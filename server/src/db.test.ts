@@ -23,16 +23,16 @@ describe('createDb', () => {
   });
 
   it('T-DB-2: a pool error is logged without the connection string and does not crash the process', async () => {
-    await sql`select 1`.execute(db);
-    expect(pool.idleCount).toBeGreaterThan(0);
+    // Terminate only this pool's own backend: other test files share the container and the application name.
+    const { rows: own } = await pool.query<{ pid: number }>('select pg_backend_pid() as pid');
+    expect(pool.totalCount).toBe(1);
+    expect(pool.idleCount).toBe(1);
 
     const admin = new pg.Client({ connectionString: databaseUrl });
     await admin.connect();
     try {
-      const { rowCount } = await admin.query(
-        `select pg_terminate_backend(pid) from pg_stat_activity where application_name = 'blanarch-server'`,
-      );
-      expect(rowCount).toBeGreaterThan(0);
+      const { rows } = await admin.query<{ ok: boolean }>('select pg_terminate_backend($1) as ok', [own[0]?.pid]);
+      expect(rows).toEqual([{ ok: true }]);
     } finally {
       await admin.end();
     }
