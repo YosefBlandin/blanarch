@@ -4,7 +4,7 @@ import { afterAll, describe, expect, inject, it, vi } from 'vitest';
 
 import { buildApp } from './app.ts';
 import type { Config } from './config.ts';
-import { APPLICATION_NAME, createDb } from './db.ts';
+import { createDb } from './db.ts';
 import type { Database } from './db/types.ts';
 
 const databaseUrl = inject('databaseUrl');
@@ -79,14 +79,16 @@ describe('GET /healthz', () => {
     );
 
     expect((await app.inject({ method: 'GET', url: '/healthz' })).statusCode).toBe(200);
-    expect(db.pool.idleCount).toBeGreaterThan(0);
+    // Terminate only this pool's own backend: other test files share the container and the application name.
+    const { rows: own } = await db.pool.query<{ pid: number }>('select pg_backend_pid() as pid');
+    expect(db.pool.totalCount).toBe(1);
+    expect(db.pool.idleCount).toBe(1);
 
     const admin = new pg.Client({ connectionString: databaseUrl });
     await admin.connect();
     try {
-      await admin.query(`select pg_terminate_backend(pid) from pg_stat_activity where application_name = $1`, [
-        APPLICATION_NAME,
-      ]);
+      const { rows } = await admin.query<{ ok: boolean }>('select pg_terminate_backend($1) as ok', [own[0]?.pid]);
+      expect(rows).toEqual([{ ok: true }]);
     } finally {
       await admin.end();
     }
