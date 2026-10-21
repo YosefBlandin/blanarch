@@ -1,0 +1,69 @@
+# Checks every pull request: the TypeScript workspace on Linux, the Flutter app and its Kotlin engine on macOS.
+# First-party actions are pinned by major version, third-party actions by commit SHA. No secrets are used.
+name: CI
+
+on:
+  pull_request:
+    branches: [qa, staging, main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.head_ref || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  server:
+    name: server
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - run: npm ci
+      - run: npm run format:check
+      - run: npm run lint
+      - run: npm run typecheck
+      # Testcontainers uses the runner's Docker.
+      - run: npm test
+
+  app:
+    name: app
+    runs-on: macos-latest
+    defaults:
+      run:
+        working-directory: blanarch
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-java@v6
+        with:
+          distribution: temurin
+          java-version: '17'
+      - uses: subosito/flutter-action@1a449444c387b1966244ae4d4f8c696479add0b2 # v2.23.0
+        with:
+          channel: stable
+          flutter-version: 3.47.5
+          cache: true
+      - run: flutter pub get
+      - run: flutter analyze
+      - run: flutter test
+      - uses: gradle/actions/wrapper-validation@3f5f9adaf7d9fecd50b5935e54106014257a94e6 # v6.4.0
+      - name: Kotlin lint and unit tests
+        working-directory: blanarch/android
+        run: |
+          # The project asks for an 8 GB daemon heap; the runner gets 3 GB. User-home properties win.
+          mkdir -p ~/.gradle
+          echo 'org.gradle.jvmargs=-Xmx3g' >> ~/.gradle/gradle.properties
+          echo "flutter.sdk=$(dirname "$(dirname "$(command -v flutter)")")" > local.properties
+          ./gradlew ktlintCheck testDebugUnitTest
+      - name: Upload golden screenshot failures
+        if: failure()
+        uses: actions/upload-artifact@v7
+        with:
+          name: golden-failures
+          path: blanarch/test/failures/
+          if-no-files-found: ignore
