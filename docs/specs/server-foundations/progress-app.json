@@ -1,0 +1,218 @@
+{
+  "spec": "server-foundations",
+  "repo": "app",
+  "brief": "pr-app.md@locked-v1",
+  "tool": "Claude Code 2.1.306",
+  "model": "claude-opus-5-5 (Opus 5.5)",
+  "baseline": {
+    "tests": "flutter test: 56 passed, 0 failed (All tests passed). Gradle testDebugUnitTest: 120 tests, 0 failures, 0 errors, 0 skipped",
+    "lint": "flutter analyze: No issues found. ktlintCheck: BUILD SUCCESSFUL",
+    "typecheck": "absent (no workspace yet)"
+  },
+  "tasks": [
+    {
+      "id": "APP-0",
+      "status": "done",
+      "commit": "none (no change)",
+      "evidence": [
+        "2026-10-21 worktree already existed at origin/qa a278702 (drift: 7 NEW, 2 OK, no missing refs)",
+        "copied gradlew, gradle-wrapper.jar, local.properties from owner checkout (ignored); flutter pub get ok",
+        "(cd blanarch && flutter analyze) -> No issues found! (ran in 2.1s)",
+        "(cd blanarch && flutter test) -> 00:03 +56: All tests passed!",
+        "(cd blanarch/android && ./gradlew ktlintCheck testDebugUnitTest) -> BUILD SUCCESSFUL in 1m 45s; JUnit XML: tests 120 skipped 0 failures 0 errors 0",
+        "git status --short -> clean",
+        "docker info -> Server Version 29.5.2 (Docker is running, so the APP-5 HUMAN need is already met)"
+      ],
+      "review": ""
+    },
+    {
+      "id": "APP-1",
+      "status": "done",
+      "commit": "2121278, 23c2e53",
+      "evidence": [
+        "fail-first: node --test scripts/hooks.test.mjs -> # tests 10 # pass 0 # fail 10 (Error: Cannot find module scripts/install-hooks.mjs)",
+        "first green: 9/10; T-HOOK-5 worktree test failed on a test bug (blocked file still staged for the follow-up commit); fixed the test with git rm --cached",
+        "spec-reviewer (fresh context, same model): no blocker; 1 major (commit-msg skipped # lines, so -m \"## <token>\" slipped through), 4 minor (binary content unscanned; type changes and a failing git diff unscanned; the printed find command used the raw list; T-HOOK-4 assertion weak)",
+        "fix round 1: added 4 failing tests (T-HOOK-2 # line, T-HOOK-1 binary, symlink type change, CR/trailing-space list) -> # pass 10 # fail 4; then: keep # lines in commit-msg, --text, --diff-filter=ACMRT, scan failure blocks, trim list lines, find command built from the filtered list, grep -a, NULs dropped before awk (macOS awk stops at NUL), T-HOOK-4 asserts the count and no commit",
+        "verify: node --test scripts/hooks.test.mjs -> # tests 14 # pass 14 # fail 0",
+        "verify: git ls-files -s .githooks -> 100755 for commit-msg, forbidden-scan.sh, pre-commit",
+        "D-25 install-first: node scripts/install-hooks.mjs -> installed into the common hooks folder; cmp with .githooks/forbidden-scan.sh identical; core.hooksPath unset; the APP-1 commit itself passed both hooks against the real list",
+        "follow-up 23c2e53 (found during APP-9): committing gradle-wrapper.jar printed tr: Illegal byte sequence; in a UTF-8 locale macOS tr aborts and BSD grep skips lines with invalid bytes, so binary content was partly unscanned without blocking. Direct LC_ALL=C count over the jar, gradlew and gradlew.bat: 0 hits each. Fail-first: new T-HOOK-1 locale case -> # tests 15 # pass 14 # fail 1; fix: tr, awk, grep under LC_ALL=C and tr/awk failure blocks -> # tests 15 # pass 15 # fail 0; hooks reinstalled"
+      ],
+      "review": "findings"
+    },
+    {
+      "id": "APP-2",
+      "status": "done",
+      "commit": "92eec53",
+      "evidence": [
+        "tests first: none (per brief)",
+        "versions installed: typescript 6.0.3 (typescript-eslint 8.72.0 peer typescript >=4.8.4 <6.1.0, so TS 7.0.2 excluded, RK-3), eslint 10.13.0, typescript-eslint 8.72.0, eslint-config-prettier 10.1.8, prettier 3.9.10, vitest 5.0.5, @types/node 24.19.2",
+        "npm install -> exit 0 (prepare ran install-hooks: installed into the common hooks folder)",
+        "npm run format:check -> exit 0 (All matched files use Prettier code style!); prettier --file-info shows blanarch/ and README.md ignored",
+        "npm run lint -> exit 0; files linted: eslint.config.js, scripts/hooks.test.mjs, scripts/install-hooks.mjs, vitest.config.ts, 0 errors",
+        "npm run typecheck -> exit 1: npm error No workspaces found! (npm --if-present does not cover zero workspaces; transient until APP-3 adds packages/contract; re-verified there)",
+        "RK-5: forbidden-scan.sh staged over all staged APP-2 files incl. package-lock.json -> 0 hits (exit 0)"
+      ],
+      "review": ""
+    },
+    {
+      "id": "APP-3",
+      "status": "done",
+      "commit": "ac3dc5f",
+      "evidence": [
+        "fail-first: npx vitest run packages/contract/src/health.test.ts -> FAIL Error: Cannot find module ./index.ts imported from packages/contract/src/health.test.ts (Test Files 1 failed)",
+        "verify: npx vitest run packages/contract/src/health.test.ts -> Test Files 1 passed (1), Tests 2 passed (2)",
+        "also: npm run format:check exit 0; npm run lint exit 0; npm run typecheck exit 0 (closes the APP-2 typecheck gap: a workspace now exists)",
+        "verify needed an empty untracked server/ dir: root vitest.config.ts lists the literal project server, which vitest requires to exist (Projects definition references a non-existing file or a directory); APP-4 creates server/"
+      ],
+      "review": ""
+    },
+    {
+      "id": "APP-4",
+      "status": "done",
+      "commit": "fc25a74",
+      "evidence": [
+        "fail-first: npx vitest run server/src/config.test.ts -> Error: Cannot find module ./config.ts (Test Files 1 failed)",
+        "verify: npx vitest run server/src/config.test.ts -> Test Files 1 passed (1), Tests 4 passed (4) [T-CFG-1, T-CFG-2, T-CFG-3 x2]",
+        "fix round 1: first T-WS-1 run failed typecheck: config.test.ts TS1294 (parameter property not allowed with erasableSyntaxOnly); test helper class simplified",
+        "T-WS-1 / verify: rm -rf node_modules && npm ci -> exit 0, added 134 packages, prepare ran install-hooks; node_modules/@blanarch has contract and server; npm run lint exit 0; npm run typecheck exit 0 (both workspaces ran tsc --noEmit -p .)",
+        "T-WS-2: planted server/src/zz-lint-probe.ts with a floating promise -> npm run lint exit 1 (2 errors: require-await, no-floating-promises); file removed -> lint exit 0; not committed",
+        "sample output: PORT=70000 LOG_LEVEL=loud DATABASE_URL=mysql://... -> config: PORT Too big: expected number to be <=65535 / config: DATABASE_URL must be a postgres:// URL / config: LOG_LEVEL Invalid option: ...; exit 1; no values printed"
+      ],
+      "review": ""
+    },
+    {
+      "id": "APP-5",
+      "status": "done",
+      "commit": "fac13a7, 87a2129",
+      "evidence": [
+        "HUMAN need (Docker running) already met: docker info Server Version 29.5.2, context colima",
+        "RK-6: without variables Testcontainers fails: Could not find a working container runtime strategy; with only DOCKER_HOST it fails creating the Ryuk mount (mkdir .../docker.sock: operation not supported); works with DOCKER_HOST=unix://$HOME/.colima/default/docker.sock and TESTCONTAINERS_DOCKER_SOCKET_OVERRIDE=/var/run/docker.sock (for APP-10 Gotchas)",
+        "fail-first: npx vitest run server/src/db.test.ts -> Error: Cannot find module ./db.ts (Test Files 1 failed)",
+        "verify: (Colima vars set) npx vitest run server/src/db.test.ts -> Test Files 1 passed (1), Tests 2 passed (2) [T-DB-1, T-DB-2]",
+        "verify: docker ps -a 12-15 s after the run -> no test or Ryuk container left (only the compose postgres)",
+        "compose: docker-compose config -q valid; with POSTGRES_PASSWORD unset -> required variable POSTGRES_PASSWORD is missing a value; up -d --wait -> healthy, port 127.0.0.1:5433->5432",
+        "T-MAN-1: row inserted; after docker-compose stop + up: kept; after docker-compose down + up: kept; test table dropped",
+        "also: npm run lint exit 0; npm run typecheck exit 0; prettier check clean",
+        "created ignored .env and server/.env from the examples with port 5433 (owner Mac already has a Postgres on 127.0.0.1:5432)",
+        "follow-up 87a2129 (conformance minor 3): T-DB-2 terminates only its own pool backend by pid (parallel test files share the container and application name); npx vitest run x3 -> Tests 17 passed (17) each"
+      ],
+      "review": ""
+    },
+    {
+      "id": "APP-6",
+      "status": "done",
+      "commit": "1344baf",
+      "evidence": [
+        "fail-first (first draft): T-MIG-1 and T-MIG-3 failed, T-MIG-2 passed vacuously (missing script also exits 1); T-MIG-2 strengthened to require the SQL error text",
+        "fail-first: npx vitest run server/src/migrations.test.ts -> 3 failed (3) (npm script migrate missing)",
+        "verify: (Colima vars) npx vitest run server/src/migrations.test.ts -> Test Files 1 passed (1), Tests 3 passed (3) [T-MIG-1, T-MIG-2, T-MIG-3]",
+        "full suite: npx vitest run -> Test Files 4 passed (4), Tests 11 passed (11) (global setup migrates the container with npm run migrate)",
+        "compose: npm -w server run migrate -> applied 1792582233372_enable-citext, Migrations complete!; second run applies nothing; npm -w server run db:types -> Introspected 0 tables, src/db/types.ts exports interface Database",
+        "lint exit 0, typecheck exit 0, prettier clean",
+        "spec-reviewer (fresh context, same model): no blocker, no major. Confirmed in node-pg-migrate 9.0.0 source: single transaction default true with rollback, advisory lock mode fail throws, exit 1 on error. 2 minor: (1) eslint.config.js edit outside APP-6 Files must be recorded -> recorded in surprises; (2) sed rename could fail silently -> db:types now greps for export interface Database and fails otherwise"
+      ],
+      "review": "findings"
+    },
+    {
+      "id": "APP-7",
+      "status": "done",
+      "commit": "797fa43, d989051",
+      "evidence": [
+        "fail-first: npx vitest run server/src/health.test.ts -> Error: Cannot find module ./app.ts (Test Files 1 failed)",
+        "verify: (Colima vars) npx vitest run server/src/health.test.ts --reporter=verbose -> 4 passed: T-HLT-1 76ms, T-HLT-2 1005ms (503 under the 1500 ms bound), T-HLT-3 36ms, T-HLT-4 8ms",
+        "fix round 1: lint require-await on the async plugin wrapper -> callback-style plugin (FastifyPluginCallbackZod); dropped a type import from transitive pino",
+        "lint exit 0, typecheck exit 0, prettier clean",
+        "follow-up d989051 (conformance minor 3): T-HLT-3 terminates only its own pool backend by pid; lint 0, typecheck 0, vitest 17/17 three runs"
+      ],
+      "review": ""
+    },
+    {
+      "id": "APP-8",
+      "status": "done",
+      "commit": "c297f8a, da528c8",
+      "evidence": [
+        "fail-first: npx vitest run server/src/server.test.ts -> 2 failed (Cannot find module server/src/server.ts)",
+        "verify: (Colima vars) npx vitest run server/src/server.test.ts -> Test Files 1 passed (1), Tests 2 passed (2) [T-SRV-1 217ms, T-SRV-2 325ms]",
+        "RK-2: plain node (24.21.0) loads server.ts and @blanarch/contract (symlinked workspace, realpath outside node_modules) through native type stripping; tsx not needed",
+        "fix round 1: lint no-unused-vars (test env copy) and prefer-const (let app) -> restructured; lint 0, typecheck 0, prettier clean, tests 2 passed",
+        "smoke: npm -w server run dev against compose -> curl /healthz = {\"status\":\"ok\",\"db\":\"up\"} 200; SIGTERM logged shutting down",
+        "follow-up da528c8 (conformance minor 2): server/package.json engines.node >=24.2, since import.meta.main exists from Node 24.2"
+      ],
+      "review": ""
+    },
+    {
+      "id": "APP-9",
+      "status": "done",
+      "commit": "98548c3",
+      "evidence": [
+        "tests first: T-CI-1 is manual and runs on the draft PR (APP-11 / HUMAN)",
+        "verify: cd blanarch/android && ./gradlew --version -> Gradle 9.3.1",
+        "verify: git ls-files -s blanarch/android/gradlew -> 100755 (gradlew.bat and gradle-wrapper.jar 100644); gradlew and jar byte-identical to the owner checkout (cmp), gradlew.bat copied from it",
+        "pins: subosito/flutter-action@1a449444c387b1966244ae4d4f8c696479add0b2 (v2.23.0, lightweight tag -> commit); gradle/actions/wrapper-validation@3f5f9adaf7d9fecd50b5935e54106014257a94e6 (v6.4.0 annotated tag dereferenced); first-party checkout@v7, setup-node@v7, setup-java@v6, upload-artifact@v7",
+        "workflow parses (ruby YAML): jobs [server, app]; prettier clean; actionlint not installed"
+      ],
+      "review": ""
+    },
+    {
+      "id": "APP-10",
+      "status": "done",
+      "commit": "5dfe6e8",
+      "evidence": [
+        "verify: npm run format:check -> exit 0 (All matched files use Prettier code style!)",
+        "T-DOC-1 checklist: CLAUDE.md intro lists server/, packages/contract/, docs/specs/ [yes]; Server commands block from Contracts Commands with npm ci first [yes]; Gotchas: Colima + Testcontainers variables from APP-5 [yes], docker compose down -v after a password change [yes], shared hooks [yes], plus compose plugin and port 5432 notes; README Layout: server/, packages/contract/, compose.yaml, setup line npm ci + docker compose up -d [yes]; profile verify.app runs the server checks -> APP-11",
+        "no en or em dashes in the added text (grep)"
+      ],
+      "review": ""
+    },
+    {
+      "id": "APP-11",
+      "status": "in_progress",
+      "commit": "e53e837",
+      "evidence": [
+        "spec-lint /Users/v/projects/forti-vpn/docs/specs/server-foundations -> 0 errors, 0 warnings",
+        "profile: already carried verify.app with the npm checks, node/docker preflight, test.app.ts/hooks and the corrected remote note; added a Notes pointer to the Colima Testcontainers variables",
+        "T-APP-1 full verify.app (Colima vars set): flutter analyze -> No issues found!; flutter test -> +56 All tests passed!; gradlew ktlintCheck testDebugUnitTest -> BUILD SUCCESSFUL, 120 tests 0 failures 0 errors 0 skipped; npm ci && format:check && lint && typecheck && npm test -> exit 0 (vitest Test Files 6 passed, Tests 17 passed; node --test hooks 15 pass 0 fail). App results equal the APP-0 baseline",
+        "D-25 scan (patterns: 12 list entries + adb serial + backup folder path from CLAUDE.local.md = 14 lines, never printed): git diff origin/qa...HEAD 0 hits; git log --format=%B origin/qa..HEAD 0 hits; drafted PR title and body 0 hits; changed file names 0 hits"
+      ],
+      "review": ""
+    }
+  ],
+  "deviations": [],
+  "surprises": [
+    "macOS awk truncates a line at a NUL byte, so binary content needed tr -d \\\\000 before the added-line extraction (APP-1)",
+    "Scan extended beyond added lines to staged file names and binary content, per reviewer findings; no decision conflict (APP-1)",
+    "APP-2: brief root script test = vitest run && node --test scripts/ fails on Node 24 (directory argument is resolved as a module); used node --test 'scripts/*.test.mjs' with the same intent",
+    "APP-2: npm run typecheck --workspaces --if-present exits 1 (No workspaces found!) while no workspace exists, so APP-2 verify typecheck could not be 0; script kept as specified, typecheck verified in APP-3",
+    "APP-2: Prettier printWidth set to 120 so the APP-1 files stay unchanged (110 would reformat scripts/hooks.test.mjs, outside APP-2 Files)",
+    "APP-3: added packages/contract/tsconfig.json (not in APP-3 Files) because the brief global constraint says each workspace runs tsc --noEmit -p .; without it typecheck and type-aware lint fail on the contract",
+    "APP-3: root vitest projects entry server must exist on disk; between APP-2 and APP-4 vitest fails at startup. Transient, resolved by APP-4",
+    "APP-3: the first npm install -w @blanarch/contract zod silently added nothing (new workspace not yet in the lockfile); a second run added zod 4.6.7",
+    "APP-5: a local Postgres already listens on 127.0.0.1:5432 on the owner Mac; the ignored .env uses POSTGRES_PORT=5433 and server/.env matches; the committed examples keep 5432",
+    "APP-5: docker compose (plugin) is not wired: Homebrew docker-compose 5.6.0 is installed but ~/.docker/config.json has no cliPluginsExtraDirs; used the standalone docker-compose binary. Owner can add cliPluginsExtraDirs [/opt/homebrew/lib/docker/cli-plugins] so docker compose works",
+    "APP-5: Testcontainers on Colima needs DOCKER_HOST and TESTCONTAINERS_DOCKER_SOCKET_OVERRIDE (RK-6 happened); passed per command, owner shell profile not edited",
+    "APP-5: npm 11.19 blocks install scripts of optional testcontainers deps (ssh2, cpu-features, protobufjs); left unapproved, tests pass without them",
+    "APP-5: createDb is generic (createDb<DB>) because db/types.ts#Database only exists from APP-6 and db.ts is not in APP-6 Files",
+    "APP-6 OUT-OF-FILES: eslint.config.js (APP-2 file) gained globalIgnores([server/src/db/types.ts]) because the generated empty interface Database {} fails no-empty-object-type. Alternative considered: db:types injecting an eslint-disable header (rejected, rewrites generated output). Reviewer judged it acceptable; no decision touched",
+    "APP-6: kysely-codegen 0.20 hard-codes the interface name DB; db:types renames it to Database with sed (fails if the rename misses) so the spec symbol exists",
+    "APP-6: Node rejects --env-file-if-exists in NODE_OPTIONS, so migrate is node --env-file-if-exists=.env \"$(command -v node-pg-migrate)\" up. dotenv also arrives hoisted via kysely-codegen, so node-pg-migrate loads server/.env too; neither overrides an existing DATABASE_URL",
+    "APP-7: Fastify default request serializer logs no headers but does log the client address; buildApp uses a req serializer with method, url and headers (so T-HLT-4 can see the redaction) and no address, and also redacts x-forwarded-for (privacy rule: no IPs in logs)",
+    "APP-9: the brief says gradle/actions/wrapper-validation at its current major while D-20 says third-party actions by commit SHA; pinned the SHA of v6.4.0 with a version comment to satisfy both",
+    "APP-9 -> APP-1 follow-up: the hook printed tr: Illegal byte sequence on the wrapper jar and let part of it through unscanned (macOS tr and BSD grep in es_AR.UTF-8). Fixed in 23c2e53 with LC_ALL=C; the jar had 0 hits. Case-insensitive matching is now ASCII-only"
+  ],
+  "final": {
+    "tests": "flutter test 56 passed; Gradle 120 tests 0 failures; vitest 17 passed (6 files); hooks node --test 15 passed",
+    "lint": "flutter analyze no issues; ktlintCheck OK; eslint exit 0; prettier --check clean",
+    "typecheck": "tsc --noEmit in contract and server: exit 0"
+  },
+  "conformance": {
+    "reviewer": "spec-reviewer subagent, fresh context, same model (claude-opus-5-5)",
+    "result": "blocker 0, major 0, minor 3",
+    "findings": [
+      "minor 1 (AC-10, D-22): hook case folding is ASCII-only since 23c2e53. Checked: 0 of the private list entries contain non-ASCII bytes (count only), so nothing is lost today. Owner to accept or ask for a locale-aware second pass",
+      "minor 2 (AC-4, D-14): import.meta.main needs Node 24.2 while engines allowed >=24 -> fixed da528c8",
+      "minor 3 (AC-7, AC-9): termination tests killed every blanarch-server backend across parallel test files -> fixed 87a2129, d989051"
+    ]
+  }
+}

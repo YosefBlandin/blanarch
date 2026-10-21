@@ -1,0 +1,3 @@
+#!/bin/sh
+# Copied into git's shared hooks folder by scripts/install-hooks.mjs (npm ci runs it). See forbidden-scan.sh.
+exec "$(dirname "$0")/forbidden-scan.sh" staged

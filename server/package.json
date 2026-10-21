@@ -1,0 +1,32 @@
+{
+  "name": "@blanarch/server",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">=24.2"
+  },
+  "scripts": {
+    "start": "node src/server.ts",
+    "dev": "node --watch --env-file-if-exists=.env src/server.ts",
+    "migrate": "node --env-file-if-exists=.env \"$(command -v node-pg-migrate)\" up",
+    "migrate:create": "node-pg-migrate create --migration-file-language sql",
+    "db:types": "kysely-codegen --env-file .env --dialect postgres --exclude-pattern pgmigrations --out-file src/db/types.ts && sed -i.bak \"s/^export interface DB /export interface Database /\" src/db/types.ts && rm src/db/types.ts.bak && grep -q \"^export interface Database \" src/db/types.ts && prettier --write src/db/types.ts",
+    "typecheck": "tsc --noEmit -p ."
+  },
+  "dependencies": {
+    "@blanarch/contract": "^0.0.0",
+    "fastify": "^5.12.7",
+    "fastify-type-provider-zod": "^7.0.0",
+    "kysely": "^0.29.7",
+    "node-pg-migrate": "^9.0.0",
+    "pg": "^8.23.1",
+    "zod": "^4.6.7"
+  },
+  "devDependencies": {
+    "@testcontainers/postgresql": "^12.2.1",
+    "@types/pg": "^8.23.1",
+    "kysely-codegen": "^0.20.0",
+    "testcontainers": "^12.2.1"
+  }
+}

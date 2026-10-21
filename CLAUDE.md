@@ -3,7 +3,11 @@
 Tools for FortiGate SSL-VPN with one-time codes:
 - `blanarch/`: **Blanarch**, a generic Android client for FortiGate SSL-VPN (Flutter UI + Kotlin engine).
   Users add their own connections; nothing company-specific ships in the app. Layout and commands: `blanarch/README.md`.
+- `server/`: the team server (Fastify + zod + Kysely on Postgres 17), roadmap phases 0 to 7. Plain SQL migrations in
+  `server/migrations/`; Kysely types in `server/src/db/types.ts` are generated, never hand-edited.
+- `packages/contract/`: zod schemas shared by the server and, later, the admin app (`@blanarch/contract`).
 - `docs/protocol/`: the wire spec the engine is built from, and `PROVENANCE.md` (clean-room record).
+- `docs/specs/`: spec folders and `spec-profile.md` for the `/spec` workflow.
 - `private/` (git-ignored, never commit): the macOS script `forti_vpn.py` + `vpn.conf` (wraps openfortivpn,
   passwords in the macOS Keychain), its README, and business notes. Company hosts and usernames live only there.
 
@@ -14,6 +18,15 @@ Tools for FortiGate SSL-VPN with one-time codes:
 - After editing `lib/l10n/*.arb`: `flutter gen-l10n`
 - Build + install: `flutter build apk --release --target-platform android-arm64 && adb install -r build/app/outputs/flutter-apk/app-release.apk`
 - zsh does not word-split `$VAR` holding a command; use `export ANDROID_SERIAL=<serial>` then plain `adb`. The owner's device serial is in `CLAUDE.local.md`.
+
+## Server commands (run from the repo root)
+- `npm ci` first: installs every workspace and the forbidden-word git hooks. Node 24 (`.nvmrc`).
+- Local Postgres: copy `.env.example` to `.env` and `server/.env.example` to `server/.env`, then `docker compose up -d`.
+- `npm -w server run migrate` applies pending migrations; `npm -w server run migrate:create -- <name>` adds a SQL file;
+  `npm -w server run db:types` regenerates the Kysely types from the migrated local database.
+- `npm -w server run dev` runs the server with reload and `server/.env`; `GET /healthz` is the health check.
+- `npm run lint` · `npm run typecheck` · `npm test` · `npm run format:check` each run across every workspace.
+  Tests start a throwaway Postgres with Testcontainers, so Docker must be running.
 
 ## Clean-room rule
 - `sslvpn/` was implemented from `docs/protocol/fortigate-sslvpn.md` only. Never paste or consult openfortivpn,
@@ -59,5 +72,17 @@ Tools for FortiGate SSL-VPN with one-time codes:
 ## Gotchas
 - `NoSuchFileException … transforms/…` from Gradle means a corrupt cache entry: delete that folder, run `./gradlew --stop`, rebuild.
 - The gateway's emailed code expires in about a minute; the IMAP check runs every 2 s.
+- Testcontainers with Colima needs `export DOCKER_HOST=unix://$HOME/.colima/default/docker.sock` and
+  `export TESTCONTAINERS_DOCKER_SOCKET_OVERRIDE=/var/run/docker.sock`; without them `npm test` fails with
+  "Could not find a working container runtime strategy".
+- If `docker compose` is an unknown command, Homebrew's plugin is not linked: use `docker-compose`, or add
+  `"cliPluginsExtraDirs": ["/opt/homebrew/lib/docker/cli-plugins"]` to `~/.docker/config.json`.
+- Postgres keeps the password from the volume's first start. After changing `POSTGRES_PASSWORD`, run
+  `docker compose down -v` (this deletes the local data). If port 5432 is taken, set `POSTGRES_PORT` in `.env` and the
+  same port in `server/.env`.
+- The hooks in `.githooks/` are copied into the shared `.git/hooks/` by `npm ci` (or `node scripts/install-hooks.mjs`),
+  so every worktree and branch runs them, and they stay after a revert. They read the main checkout's
+  `private/company-strings.txt` and block when it is missing; `SKIP_FORBIDDEN_CHECK=1` only works without a list.
+  Never set `core.hooksPath`.
 - End-to-end SSL-VPN connections are confirmed on a real gateway (connect, network loss, session expiry).
   IPsec has never connected; don't claim it works until the Activity log shows "Connected".
