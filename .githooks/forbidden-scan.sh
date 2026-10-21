@@ -42,10 +42,14 @@ if [ "$mode" = staged ]; then
     rm -f "$text.diff"
     failed
   }
-  # awk stops at a NUL byte, so drop NULs from binary content first.
-  tr -d '\000' < "$text.diff" |
-    awk '/^diff --git /{h=0; next} /^@@/{h=1; next} h && /^\+/{print substr($0, 2)}' >> "$text"
-  rm -f "$text.diff"
+  # awk stops at a NUL byte, so drop NULs from binary content first. Both run byte-wise (LC_ALL=C), since
+  # in a UTF-8 locale macOS tr aborts on invalid byte sequences. Any failure blocks the commit.
+  { LC_ALL=C tr -d '\000' < "$text.diff" > "$text.clean" &&
+    LC_ALL=C awk '/^diff --git /{h=0; next} /^@@/{h=1; next} h && /^\+/{print substr($0, 2)}' "$text.clean" >> "$text"; } || {
+    rm -f "$text.diff" "$text.clean"
+    failed
+  }
+  rm -f "$text.diff" "$text.clean"
   what="added line(s) or file name(s)"
   source="git diff --cached --text"
 else
@@ -56,7 +60,8 @@ else
   source="cat '$2'"
 fi
 
-hits=$(grep -aicF -f "$patterns" "$text")
+# Byte-wise too: in a UTF-8 locale BSD grep skips lines with invalid bytes. Case folding is ASCII only.
+hits=$(LC_ALL=C grep -aicF -f "$patterns" "$text")
 case $hits in
   '' | *[!0-9]*) failed ;;
 esac

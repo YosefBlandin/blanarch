@@ -107,6 +107,18 @@ test('T-HOOK-1: a listed string inside a file git treats as binary is blocked', 
   assert.match(r.out, /pre-commit: 1 /);
 });
 
+test('T-HOOK-1: a listed string after invalid UTF-8 bytes is blocked under a UTF-8 locale', () => {
+  const repo = newRepo();
+  writeFileSync(
+    join(repo, 'blob.jar'),
+    Buffer.concat([Buffer.from([0x00, 0xff, 0xfe, 0xc3]), Buffer.from(` ${TOKEN}\n`)]),
+  );
+  git(repo, ['add', 'blob.jar']);
+  const r = git(repo, ['commit', '-q', '-m', 'add jar'], { LC_ALL: 'en_US.UTF-8', LANG: 'en_US.UTF-8' });
+  assert.notEqual(r.code, 0, r.out);
+  assert.match(r.out, /pre-commit: 1 /);
+});
+
 test('T-HOOK-1: a symlink replaced by a file with a listed string is blocked', () => {
   const repo = newRepo();
   symlinkSync('ok.txt', join(repo, 'link'));
